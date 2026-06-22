@@ -17,8 +17,16 @@ body{
 }
 
 .header{
-    text-align:center;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
     margin-bottom:32px;
+    gap:20px;
+}
+
+.header-content{
+    text-align:center;
+    flex:1;
 }
 
 .header h1{
@@ -29,6 +37,28 @@ body{
 .header p{
     margin-top:8px;
     color:#6b7280;
+}
+
+.logout-btn{
+    padding:10px 20px;
+    background:#ef4444;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.25s;
+    font-size:14px;
+    white-space:nowrap;
+}
+
+.logout-btn:hover{
+    background:#dc2626;
+    transform:translateY(-2px);
+}
+
+.logout-btn:active{
+    transform:translateY(0);
 }
 
 .pills{
@@ -748,6 +778,16 @@ body{
 }
 
 @media(max-width:768px){
+
+    .header{
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
+    }
+
+    .logout-btn{
+        width:100%;
+    }
 
     .calendar{
         grid-template-columns:repeat(2,1fr);

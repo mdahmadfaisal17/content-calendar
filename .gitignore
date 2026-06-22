@@ -1,0 +1,75 @@
+# ==================== Environment Variables ====================
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# ==================== Dependencies ====================
+node_modules/
+package-lock.json
+yarn.lock
+
+# ==================== Logs ====================
+*.log
+*.logs
+npm-debug.log*
+npm-error.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ==================== System Files ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==================== IDE & Editor ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.sublime-workspace
+*.sublime-project
+.vim/
+
+# ==================== OS ====================
+.env.local.php
+.cache
+.parcel-cache
+.next
+.nuxt
+dist
+build
+
+# ==================== Sensitive Data ====================
+# Do NOT commit any files containing:
+# - Database credentials
+# - API keys or tokens
+# - Session secrets
+# - Private keys
+# - Authentication tokens
+# - Third-party service credentials
+
+# ==================== MongoDB ====================
+mongo/
+mongodb/
+.mongo
+
+# ==================== Testing ====================
+coverage/
+.nyc_output/
+
+# ==================== Backups ====================
+*.bak
+*.backup
+*.tmp
+

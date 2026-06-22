@@ -111,44 +111,113 @@ const topicColors = {
     "Branding Opinion": "color-13"
 };
 
+// Global state
 let currentPlatform = "";
 let currentMonth = "";
 let allEvents = {};
 let currentModalDate = "";
 let currentModalPlatform = "";
+let postStatuses = {}; // Store status from MongoDB: { "platform_date": {_id, status} }
 
-// Load status from localStorage
-function getStatus(platform, date) {
-    const statusKey = `status_${platform}_${date}`;
-    return localStorage.getItem(statusKey) || "pending";
-}
+// ==================== API Calls ====================
 
-// Save status to localStorage
-function setStatus(platform, date, status) {
-    const statusKey = `status_${platform}_${date}`;
-    localStorage.setItem(statusKey, status);
-}
-
-// Reset all statuses to pending
-function resetAllStatuses() {
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-        if(key.startsWith('status_')) {
-            localStorage.removeItem(key);
+async function fetchPostStatuses() {
+    try {
+        const response = await fetch('/api/posts');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Build a lookup object: key = "platform_date", value = { _id, status }
+            postStatuses = {};
+            result.data.forEach(post => {
+                if (post.platform && post.date) {
+                    const key = `${post.platform}_${post.date}`;
+                    postStatuses[key] = {
+                        _id: post._id,
+                        status: post.status || 'pending'
+                    };
+                }
+            });
+            console.log('✓ Loaded post statuses from MongoDB');
         }
-    });
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+    }
+}
+
+async function savePostStatus(platform, date, topic, status) {
+    try {
+        const key = `${platform}_${date}`;
+        
+        // Check if post exists
+        if (postStatuses[key]) {
+            // Update existing post
+            const response = await fetch(`/api/posts/${postStatuses[key]._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status })
+            });
+            
+            if (response.ok) {
+                postStatuses[key].status = status;
+                console.log(`✓ Updated status for ${platform} ${date} to ${status}`);
+            }
+        } else {
+            // Create new post
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    platform,
+                    date,
+                    topic,
+                    status
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                postStatuses[key] = {
+                    _id: result.data._id,
+                    status: status
+                };
+                console.log(`✓ Created new post for ${platform} ${date}`);
+            }
+        }
+        
+        // Refresh the calendar to show updated status
+        loadPlatform(currentPlatform);
+    } catch (error) {
+        console.error('Error saving post status:', error);
+    }
+}
+
+// ==================== Status Management ====================
+
+function getStatus(platform, date) {
+    const key = `${platform}_${date}`;
+    return postStatuses[key]?.status || 'pending';
 }
 
 function saveStatus() {
     const statusDropdown = document.getElementById("statusDropdown");
     const newStatus = statusDropdown.value;
+    
     if (currentModalDate && currentModalPlatform) {
-        setStatus(currentModalPlatform, currentModalDate, newStatus);
-        // Refresh calendar to show updated status
-        loadPlatform(currentPlatform);
+        // Get the topic from the platform events
+        const platform = platforms[currentModalPlatform];
+        const topic = platform?.events[currentModalDate]?.text || 'Unknown Topic';
+        
+        savePostStatus(currentModalPlatform, currentModalDate, topic, newStatus);
     }
     closeModal();
 }
+
+// ==================== Modal Management ====================
 
 function openUpcomingModal(dateKey, platformKey) {
     // Find the platform data
@@ -210,6 +279,8 @@ function openModal(day, month){
 function closeModal(){
     document.getElementById("modal").classList.remove("active");
 }
+
+// ==================== Calendar Rendering ====================
 
 function buildCalendar(containerId, monthDays, startOffset, events, month){
 
@@ -291,11 +362,12 @@ function collectUpcomingEvents(){
         const events = platformData.events;
         
         Object.keys(events).forEach(dateKey => {
-            if(next7Days.includes(dateKey)){
+            const status = getStatus(platformName, dateKey);
+            // Show if: within next 7 days OR status is "working"
+            if(next7Days.includes(dateKey) || status === "working"){
                 if(!eventsByDate[dateKey]){
                     eventsByDate[dateKey] = [];
                 }
-                const status = getStatus(platformName, dateKey);
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
                     text: events[dateKey].text,
@@ -423,6 +495,32 @@ function generateUpcomingNotes(){
     return html;
 }
 
+function renderColorLegend(colorLegend) {
+    const legendContainer = document.getElementById("upcomingLegend");
+    if (!legendContainer) return;
+    
+    let html = '<div class="legend-title">Content Categories</div>';
+    
+    Object.keys(colorLegend).sort().forEach(platform => {
+        html += `<div class="legend-section">`;
+        html += `<div class="legend-platform">${platform}</div>`;
+        
+        Object.keys(colorLegend[platform]).forEach(topicName => {
+            const colorClass = colorLegend[platform][topicName];
+            html += `
+            <div class="legend-item">
+                <div class="legend-color ${colorClass}"></div>
+                <div class="legend-text">${topicName}</div>
+            </div>
+            `;
+        });
+        
+        html += '</div>';
+    });
+    
+    legendContainer.innerHTML = html;
+}
+
 function loadPlatform(name){
 
     if(name === "upcoming"){
@@ -477,33 +575,63 @@ function switchTab(event,name){
 
 }
 
-function renderColorLegend(colorLegend) {
-    const legendContainer = document.getElementById("upcomingLegend");
-    if (!legendContainer) return;
-    
-    let html = '<div class="legend-title">Content Categories</div>';
-    
-    Object.keys(colorLegend).sort().forEach(platform => {
-        html += `<div class="legend-section">`;
-        html += `<div class="legend-platform">${platform}</div>`;
+// ==================== Authentication ====================
+
+async function checkAuthentication() {
+    try {
+        const response = await fetch('/api/auth/check');
+        const data = await response.json();
         
-        Object.keys(colorLegend[platform]).forEach(topicName => {
-            const colorClass = colorLegend[platform][topicName];
-            html += `
-            <div class="legend-item">
-                <div class="legend-color ${colorClass}"></div>
-                <div class="legend-text">${topicName}</div>
-            </div>
-            `;
-        });
-        
-        html += '</div>';
-    });
-    
-    legendContainer.innerHTML = html;
+        if (!data.authenticated) {
+            // Redirect to login if not authenticated
+            window.location.href = '/login';
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error('Auth check error:', error);
+        window.location.href = '/login';
+        return false;
+    }
 }
 
-// Reset all statuses to pending on page load
-resetAllStatuses();
+async function logout() {
+    if (!confirm('Are you sure you want to logout?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Redirect to login
+            window.location.href = '/login';
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('Logout failed');
+    }
+}
 
-loadPlatform("upcoming");
+// ==================== Initialization ====================
+
+async function initializeApp() {
+    // Check authentication first
+    const isAuthenticated = await checkAuthentication();
+    if (!isAuthenticated) return;
+    
+    console.log('Initializing Content Calendar...');
+    await fetchPostStatuses();
+    loadPlatform("upcoming");
+    console.log('✓ App initialized');
+}
+
+// Start the app
+initializeApp();
