@@ -263,7 +263,11 @@ function openModal(day, month){
     
     // Display topic or "No posts" message
     if(events[fullDate]){
-        topicDisplay = `<div class="modal-post-item">${events[fullDate].text}</div>`;
+        // Check localStorage for renamed topic first
+        const topicKey = `topic_${currentPlatform}_${fullDate}`;
+        const savedTopic = localStorage.getItem(topicKey);
+        const displayTopic = savedTopic || events[fullDate].text;
+        topicDisplay = `<div class="modal-post-item">${displayTopic}</div>`;
     } else {
         topicDisplay = `<div class="modal-no-posts">No posts scheduled for this day</div>`;
     }
@@ -616,7 +620,10 @@ function buildCalendar(containerId, monthDays, startOffset, events, month){
         const fullDate = `2026-${monthNum}-${String(day).padStart(2, '0')}`;
         
         if(events[fullDate]){
-            content = events[fullDate].text;
+            // Check localStorage for renamed topic first
+            const topicKey = `topic_${currentPlatform}_${fullDate}`;
+            const savedTopic = localStorage.getItem(topicKey);
+            content = savedTopic || events[fullDate].text;
             // Get color from localStorage first, then fall back to topicColors, then class
             const colorKey = `topicColor_${currentPlatform}_${fullDate}`;
             const savedColor = localStorage.getItem(colorKey);
@@ -688,9 +695,14 @@ function collectUpcomingEvents(){
                 if(!eventsByDate[dateKey]){
                     eventsByDate[dateKey] = [];
                 }
+                // Check localStorage for renamed topic first
+                const topicKey = `topic_${platformName}_${dateKey}`;
+                const savedTopic = localStorage.getItem(topicKey);
+                const displayText = savedTopic || events[dateKey].text;
+                
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
-                    text: events[dateKey].text,
+                    text: displayText,
                     class: events[dateKey].class,
                     info: platformData.info,
                     status: status,
