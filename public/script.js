@@ -117,6 +117,7 @@ let currentMonth = "";
 let allEvents = {};
 let currentModalDate = "";
 let currentModalPlatform = "";
+let activeTabBeforeModal = ""; // Track which tab was active before opening modal
 let postStatuses = {}; // Store status from MongoDB: { "platform_date": {_id, status} }
 
 // ==================== API Calls ====================
@@ -206,7 +207,13 @@ async function savePostStatus(platform, date, topic, status, color = null) {
         }
         
         // Refresh the calendar to show updated status
-        loadPlatform(currentPlatform);
+        // If we came from upcoming tab, restore it; otherwise load the current platform
+        if (activeTabBeforeModal === "upcoming") {
+            loadPlatform("upcoming");
+            activeTabBeforeModal = "";
+        } else {
+            loadPlatform(currentPlatform);
+        }
     } catch (error) {
         console.error('Error saving post status:', error);
     }
@@ -234,11 +241,15 @@ function saveStatus() {
     const newStatus = statusDropdown.value;
     
     if (currentModalDate && currentModalPlatform) {
-        // Get the topic from the platform events
+        // Get the topic from database first, then fall back to platform events
+        const dbTopic = getTopic(currentModalPlatform, currentModalDate);
         const platform = platforms[currentModalPlatform];
-        const topic = platform?.events[currentModalDate]?.text || 'Unknown Topic';
+        const topic = dbTopic || platform?.events[currentModalDate]?.text || 'Unknown Topic';
         
-        savePostStatus(currentModalPlatform, currentModalDate, topic, newStatus);
+        // Get color to preserve it
+        const currentColor = getColor(currentModalPlatform, currentModalDate);
+        
+        savePostStatus(currentModalPlatform, currentModalDate, topic, newStatus, currentColor);
     }
     closeModal();
 }
@@ -255,6 +266,9 @@ function openUpcomingModal(dateKey, platformKey) {
     });
     
     if(!platformName) return;
+    
+    // Save the active tab before changing platform
+    activeTabBeforeModal = currentPlatform;
     
     // Set current platform
     currentPlatform = platformName;
@@ -333,7 +347,7 @@ function toggleEditTopic(){
     }
 }
 
-function saveTopicName(){
+async function saveTopicName(){
     const newTopicName = document.getElementById("topicInput").value.trim();
     
     if(!newTopicName){
@@ -351,11 +365,10 @@ function saveTopicName(){
             const currentColor = getColor(currentModalPlatform, currentModalDate);
             
             // Save to database via API
-            savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor);
+            await savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor);
             
-            // Update the display
-            document.getElementById("topicDisplay").innerHTML = `<div class="modal-post-item">${newTopicName}</div>`;
-            cancelEditTopic();
+            // Close the modal to refresh with updated data
+            closeModal();
         }
     }
 }
@@ -455,7 +468,7 @@ function updateColorGradient(hue){
     gradient.style.background = `linear-gradient(to right, #fff, hsl(${hue}, 100%, 50%))`;
 }
 
-function applySelectedColor(){
+async function applySelectedColor(){
     const hexColor = document.getElementById("hexInput").value.trim();
     
     if(!hexColor.match(/^#[0-9A-F]{6}$/i)){
@@ -471,10 +484,11 @@ function applySelectedColor(){
             const currentStatus = getStatus(currentModalPlatform, currentModalDate);
             
             // Save color through API
-            savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor);
+            await savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor);
             
-            // Refresh the calendar
+            // Close both modals to refresh with updated data
             closeColorPickerModal();
+            closeModal();
         }
     }
 }
