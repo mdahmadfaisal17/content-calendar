@@ -127,14 +127,16 @@ async function fetchPostStatuses() {
         const result = await response.json();
         
         if (result.success && result.data) {
-            // Build a lookup object: key = "platform_date", value = { _id, status }
+            // Build a lookup object: key = "platform_date", value = { _id, status, topic, color }
             postStatuses = {};
             result.data.forEach(post => {
                 if (post.platform && post.date) {
                     const key = `${post.platform}_${post.date}`;
                     postStatuses[key] = {
                         _id: post._id,
-                        status: post.status || 'pending'
+                        status: post.status || 'pending',
+                        topic: post.topic || null,
+                        color: post.color || null
                     };
                 }
             });
@@ -145,7 +147,7 @@ async function fetchPostStatuses() {
     }
 }
 
-async function savePostStatus(platform, date, topic, status) {
+async function savePostStatus(platform, date, topic, status, color = null) {
     try {
         const key = `${platform}_${date}`;
         
@@ -157,12 +159,21 @@ async function savePostStatus(platform, date, topic, status) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status })
+                body: JSON.stringify({ status, topic, color })
             });
             
             if (response.ok) {
-                postStatuses[key].status = status;
-                console.log(`✓ Updated status for ${platform} ${date} to ${status}`);
+                const result = await response.json();
+                if (result.success) {
+                    postStatuses[key].status = status;
+                    postStatuses[key].topic = topic;
+                    postStatuses[key].color = color;
+                    console.log(`✓ Updated ${key}: status=${status}, topic=${topic}, color=${color}`);
+                } else {
+                    console.error(`✗ Backend error: ${result.error}`);
+                }
+            } else {
+                console.error(`✗ HTTP ${response.status} updating ${key}`);
             }
         } else {
             // Create new post
@@ -175,7 +186,8 @@ async function savePostStatus(platform, date, topic, status) {
                     platform,
                     date,
                     topic,
-                    status
+                    status,
+                    color
                 })
             });
             
@@ -183,9 +195,13 @@ async function savePostStatus(platform, date, topic, status) {
             if (result.success) {
                 postStatuses[key] = {
                     _id: result.data._id,
-                    status: status
+                    status: status,
+                    topic: topic,
+                    color: color
                 };
-                console.log(`✓ Created new post for ${platform} ${date}`);
+                console.log(`✓ Created new post for ${key}`);
+            } else {
+                console.error(`✗ Error creating post: ${result.error}`);
             }
         }
         
@@ -201,6 +217,16 @@ async function savePostStatus(platform, date, topic, status) {
 function getStatus(platform, date) {
     const key = `${platform}_${date}`;
     return postStatuses[key]?.status || 'pending';
+}
+
+function getTopic(platform, date) {
+    const key = `${platform}_${date}`;
+    return postStatuses[key]?.topic || null;
+}
+
+function getColor(platform, date) {
+    const key = `${platform}_${date}`;
+    return postStatuses[key]?.color || null;
 }
 
 function saveStatus() {
@@ -263,10 +289,9 @@ function openModal(day, month){
     
     // Display topic or "No posts" message
     if(events[fullDate]){
-        // Check localStorage for renamed topic first
-        const topicKey = `topic_${currentPlatform}_${fullDate}`;
-        const savedTopic = localStorage.getItem(topicKey);
-        const displayTopic = savedTopic || events[fullDate].text;
+        // Get topic from database first, then fall back to original topic
+        const dbTopic = getTopic(currentPlatform, fullDate);
+        const displayTopic = dbTopic || events[fullDate].text;
         topicDisplay = `<div class="modal-post-item">${displayTopic}</div>`;
     } else {
         topicDisplay = `<div class="modal-no-posts">No posts scheduled for this day</div>`;
@@ -317,22 +342,20 @@ function saveTopicName(){
     }
     
     if(currentModalDate && currentModalPlatform){
-        // Update the platform events object
+        // Update the platform events object for local UI display
         const platform = platforms[currentModalPlatform];
         if(platform && platform.events[currentModalDate]){
             const oldTopic = platform.events[currentModalDate].text;
-            platform.events[currentModalDate].text = newTopicName;
             
-            // Save to localStorage as backup
-            const topicKey = `topic_${currentModalPlatform}_${currentModalDate}`;
-            localStorage.setItem(topicKey, newTopicName);
+            // Get the current color to preserve it
+            const currentColor = getColor(currentModalPlatform, currentModalDate);
+            
+            // Save to database via API
+            savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor);
             
             // Update the display
             document.getElementById("topicDisplay").innerHTML = `<div class="modal-post-item">${newTopicName}</div>`;
             cancelEditTopic();
-            
-            // Refresh the calendar
-            loadPlatform(currentPlatform);
         }
     }
 }
@@ -367,21 +390,15 @@ const hexToColorClass = Object.fromEntries(
 let currentSelectedColor = "#f0edff";
 
 function initializeColorPicker(){
-    const colorKey = `topicColor_${currentModalPlatform}_${currentModalDate}`;
-    const savedColor = localStorage.getItem(colorKey);
-    const customColorKey = `customColor_${currentModalPlatform}_${currentModalDate}`;
-    const customHexColor = localStorage.getItem(customColorKey);
-    const topicText = platforms[currentModalPlatform]?.events[currentModalDate]?.text;
+    const dbColor = getColor(currentModalPlatform, currentModalDate);
+    const topicText = getTopic(currentModalPlatform, currentModalDate) || platforms[currentModalPlatform]?.events[currentModalDate]?.text;
     const topicColorClass = topicColors[topicText];
     
     let hexColor = "#f0edff"; // default
     
-    // Check for custom hex color first
-    if(customHexColor){
-        hexColor = customHexColor;
-    } else if(savedColor && savedColor !== "custom"){
-        // If it's a color class
-        hexColor = colorClassToHex[savedColor] || hexColor;
+    // Check for custom hex color from database first
+    if(dbColor){
+        hexColor = dbColor;
     } else if(topicColorClass){
         hexColor = colorClassToHex[topicColorClass] || hexColor;
     }
@@ -449,16 +466,14 @@ function applySelectedColor(){
     if(currentModalDate && currentModalPlatform){
         const platform = platforms[currentModalPlatform];
         if(platform && platform.events[currentModalDate]){
-            // Store the custom hex color directly
-            const customColorKey = `customColor_${currentModalPlatform}_${currentModalDate}`;
-            localStorage.setItem(customColorKey, hexColor);
+            // Get the current topic from database
+            const currentTopic = getTopic(currentModalPlatform, currentModalDate) || platform.events[currentModalDate].text;
+            const currentStatus = getStatus(currentModalPlatform, currentModalDate);
             
-            // Also store a marker that this event has a custom color
-            const colorKey = `topicColor_${currentModalPlatform}_${currentModalDate}`;
-            localStorage.setItem(colorKey, "custom");
+            // Save color through API
+            savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor);
             
             // Refresh the calendar
-            loadPlatform(currentPlatform);
             closeColorPickerModal();
         }
     }
@@ -620,29 +635,25 @@ function buildCalendar(containerId, monthDays, startOffset, events, month){
         const fullDate = `2026-${monthNum}-${String(day).padStart(2, '0')}`;
         
         if(events[fullDate]){
-            // Check localStorage for renamed topic first
-            const topicKey = `topic_${currentPlatform}_${fullDate}`;
-            const savedTopic = localStorage.getItem(topicKey);
-            content = savedTopic || events[fullDate].text;
-            // Get color from localStorage first, then fall back to topicColors, then class
-            const colorKey = `topicColor_${currentPlatform}_${fullDate}`;
-            const savedColor = localStorage.getItem(colorKey);
-            className = savedColor || topicColors[content] || events[fullDate].class;
+            // Get topic from database first, then fall back to original event topic
+            const dbTopic = getTopic(currentPlatform, fullDate);
+            content = dbTopic || events[fullDate].text;
+            
+            // Get color from database, then fall back to topicColors mapping
+            const dbColor = getColor(currentPlatform, fullDate);
+            className = dbColor ? "custom" : (topicColors[content] || events[fullDate].class);
         }
 
         const status = getStatus(currentPlatform, fullDate);
         const statusColor = status === "done" ? "#22c55e" : status === "working" ? "#4169E1" : "#ef4444";
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
         
-        // Check for custom hex color
+        // Check for custom hex color from database
         let inlineStyle = "";
-        if(className === "custom"){
-            const customColorKey = `customColor_${currentPlatform}_${fullDate}`;
-            const customHexColor = localStorage.getItem(customColorKey);
-            if(customHexColor){
-                inlineStyle = ` style="background-color: ${customHexColor};"`;
-                className = ""; // Don't apply class since we have inline style
-            }
+        const dbColor = getColor(currentPlatform, fullDate);
+        if(dbColor){
+            inlineStyle = ` style="background-color: ${dbColor};"`;
+            className = ""; // Don't apply class since we have inline style
         }
 
         html += `
@@ -695,10 +706,9 @@ function collectUpcomingEvents(){
                 if(!eventsByDate[dateKey]){
                     eventsByDate[dateKey] = [];
                 }
-                // Check localStorage for renamed topic first
-                const topicKey = `topic_${platformName}_${dateKey}`;
-                const savedTopic = localStorage.getItem(topicKey);
-                const displayText = savedTopic || events[dateKey].text;
+                // Get topic from database first, then from events
+                const dbTopic = getTopic(platformName, dateKey);
+                const displayText = dbTopic || events[dateKey].text;
                 
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
@@ -746,20 +756,15 @@ function renderUpcomingEvents(){
             const timeMatch = event.info.match(/(\d{1,2}:\d{2}\s(?:AM|PM|BST))/);
             const postingTime = timeMatch ? timeMatch[1] : "N/A";
             
-            // Get color from localStorage first, then fall back to topicColors
-            const colorKey = `topicColor_${event.platformKey}_${event.dateKey}`;
-            const savedColor = localStorage.getItem(colorKey);
-            let colorClass = savedColor || topicColors[event.text] || "color-1";
+            // Get color from database first, then fall back to topicColors
+            const dbColor = getColor(event.platformKey, event.dateKey);
+            let colorClass = topicColors[event.text] || "color-1";
             
-            // Check for custom hex color
+            // Check for custom hex color from database
             let inlineStyle = "";
-            if(colorClass === "custom"){
-                const customColorKey = `customColor_${event.platformKey}_${event.dateKey}`;
-                const customHexColor = localStorage.getItem(customColorKey);
-                if(customHexColor){
-                    inlineStyle = ` style="background-color: ${customHexColor};"`;
-                    colorClass = ""; // Don't apply class since we have inline style
-                }
+            if(dbColor){
+                inlineStyle = ` style="background-color: ${dbColor};"`;
+                colorClass = ""; // Don't apply class since we have inline style
             }
             
             // Collect color legend
