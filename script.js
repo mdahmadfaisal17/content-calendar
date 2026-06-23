@@ -184,7 +184,7 @@ function openModal(day, month){
     document.getElementById("modalPlatform").innerHTML = platform.title;
     document.getElementById("modalDate").innerHTML = `${month.charAt(0).toUpperCase() + month.slice(1)} ${day}, 2026`;
     
-    let postsList = "";
+    let topicDisplay = "";
     const events = platform.events;
     const monthNum = month === "june" ? "06" : "07";
     const fullDate = `2026-${monthNum}-${String(day).padStart(2, '0')}`;
@@ -192,19 +192,361 @@ function openModal(day, month){
     currentModalDate = fullDate;
     currentModalPlatform = currentPlatform;
     
+    // Display topic or "No posts" message
     if(events[fullDate]){
-        postsList = `<div class="modal-post-item">${events[fullDate].text}</div>`;
+        topicDisplay = `<div class="modal-post-item">${events[fullDate].text}</div>`;
     } else {
-        postsList = `<div class="modal-no-posts">No posts scheduled for this day</div>`;
+        topicDisplay = `<div class="modal-no-posts">No posts scheduled for this day</div>`;
     }
     
-    document.getElementById("modalPostsList").innerHTML = postsList;
+    document.getElementById("topicDisplay").innerHTML = topicDisplay;
+    
+    // Hide edit and color buttons if no posts scheduled
+    if(!events[fullDate]){
+        document.getElementById("editTopicBtn").style.display = "none";
+        document.getElementById("colorPickerBtn").style.display = "none";
+    } else {
+        document.getElementById("editTopicBtn").style.display = "block";
+        document.getElementById("colorPickerBtn").style.display = "block";
+        initializeColorPicker();
+    }
+    
+    // Reset edit mode
+    cancelEditTopic();
     
     // Set current status in dropdown
     const currentStatus = getStatus(currentPlatform, fullDate);
     document.getElementById("statusDropdown").value = currentStatus;
     
     modal.classList.add("active");
+}
+
+function toggleEditTopic(){
+    const topicDisplay = document.getElementById("topicDisplay");
+    const editContainer = document.getElementById("editTopicContainer");
+    
+    if(editContainer.style.display === "none"){
+        // Enter edit mode
+        const topicText = topicDisplay.querySelector(".modal-post-item").textContent;
+        document.getElementById("topicInput").value = topicText;
+        topicDisplay.style.display = "none";
+        editContainer.style.display = "flex";
+        document.getElementById("topicInput").focus();
+    }
+}
+
+function saveTopicName(){
+    const newTopicName = document.getElementById("topicInput").value.trim();
+    
+    if(!newTopicName){
+        alert("Topic name cannot be empty");
+        return;
+    }
+    
+    if(currentModalDate && currentModalPlatform){
+        // Update the platform events object
+        const platform = platforms[currentModalPlatform];
+        if(platform && platform.events[currentModalDate]){
+            const oldTopic = platform.events[currentModalDate].text;
+            platform.events[currentModalDate].text = newTopicName;
+            
+            // Save to localStorage as backup
+            const topicKey = `topic_${currentModalPlatform}_${currentModalDate}`;
+            localStorage.setItem(topicKey, newTopicName);
+            
+            // Update the display
+            document.getElementById("topicDisplay").innerHTML = `<div class="modal-post-item">${newTopicName}</div>`;
+            cancelEditTopic();
+            
+            // Refresh the calendar
+            loadPlatform(currentPlatform);
+        }
+    }
+}
+
+function cancelEditTopic(){
+    document.getElementById("topicDisplay").style.display = "block";
+    document.getElementById("editTopicContainer").style.display = "none";
+}
+
+// ==================== Color Picker Functions ====================
+// Color mapping for each color class to hex values
+const colorClassToHex = {
+    "color-1": "#f0edff",   // Purple light
+    "color-2": "#edf4ff",   // Blue light
+    "color-3": "#fff4ea",   // Orange light
+    "color-4": "#ebfff1",   // Green light
+    "color-5": "#fce7f3",   // Pink light
+    "color-6": "#fef08a",   // Yellow light
+    "color-7": "#e0e7ff",   // Indigo light
+    "color-8": "#f3e8ff",   // Purple light 2
+    "color-9": "#dbeafe",   // Sky light
+    "color-10": "#fed7aa",  // Orange light 2
+    "color-11": "#c7d2fe",  // Indigo light 2
+    "color-12": "#bfdbfe",  // Blue light 2
+    "color-13": "#86efac"   // Green light 2
+};
+
+const hexToColorClass = Object.fromEntries(
+    Object.entries(colorClassToHex).map(([k, v]) => [v.toLowerCase(), k])
+);
+
+let currentSelectedColor = "#f0edff";
+
+function initializeColorPicker(){
+    const colorKey = `topicColor_${currentModalPlatform}_${currentModalDate}`;
+    const savedColor = localStorage.getItem(colorKey);
+    const customColorKey = `customColor_${currentModalPlatform}_${currentModalDate}`;
+    const customHexColor = localStorage.getItem(customColorKey);
+    const topicText = platforms[currentModalPlatform]?.events[currentModalDate]?.text;
+    const topicColorClass = topicColors[topicText];
+    
+    let hexColor = "#f0edff"; // default
+    
+    // Check for custom hex color first
+    if(customHexColor){
+        hexColor = customHexColor;
+    } else if(savedColor && savedColor !== "custom"){
+        // If it's a color class
+        hexColor = colorClassToHex[savedColor] || hexColor;
+    } else if(topicColorClass){
+        hexColor = colorClassToHex[topicColorClass] || hexColor;
+    }
+    
+    currentSelectedColor = hexColor;
+    document.getElementById("hexInput").value = hexColor;
+    
+    // Convert hex to HSL to set the correct hue and position the circle
+    const hsl = hexToHsl(hexColor);
+    document.getElementById("colorHue").value = hsl.h;
+    updateColorGradient(hsl.h);
+    updateColorSelectorPosition(hsl.s, hsl.l);
+}
+
+function openColorPickerModal(){
+    initializeColorPicker();
+    renderColorPresets();
+    document.getElementById("colorPickerOverlay").classList.add("active");
+}
+
+function closeColorPickerModal(){
+    document.getElementById("colorPickerOverlay").classList.remove("active");
+}
+
+function renderColorPresets(){
+    const container = document.querySelector(".preset-colors");
+    const presetHexColors = Object.values(colorClassToHex);
+    
+    container.innerHTML = '';
+    presetHexColors.forEach(hexColor => {
+        const btn = document.createElement("button");
+        btn.className = "preset-color-btn";
+        btn.style.background = hexColor;
+        if(hexColor.toLowerCase() === currentSelectedColor.toLowerCase()){
+            btn.classList.add("selected");
+        }
+        btn.onclick = () => selectPresetColor(hexColor, btn);
+        container.appendChild(btn);
+    });
+}
+
+function selectPresetColor(hexColor, btn){
+    currentSelectedColor = hexColor;
+    document.getElementById("hexInput").value = hexColor;
+    
+    document.querySelectorAll(".preset-color-btn").forEach(b => {
+        b.classList.remove("selected");
+    });
+    btn.classList.add("selected");
+}
+
+function updateColorGradient(hue){
+    const gradient = document.getElementById("colorGradient");
+    gradient.style.background = `linear-gradient(to right, #fff, hsl(${hue}, 100%, 50%))`;
+}
+
+function applySelectedColor(){
+    const hexColor = document.getElementById("hexInput").value.trim();
+    
+    if(!hexColor.match(/^#[0-9A-F]{6}$/i)){
+        alert("Please enter a valid hex color (e.g., #FF0000)");
+        return;
+    }
+    
+    if(currentModalDate && currentModalPlatform){
+        const platform = platforms[currentModalPlatform];
+        if(platform && platform.events[currentModalDate]){
+            // Store the custom hex color directly
+            const customColorKey = `customColor_${currentModalPlatform}_${currentModalDate}`;
+            localStorage.setItem(customColorKey, hexColor);
+            
+            // Also store a marker that this event has a custom color
+            const colorKey = `topicColor_${currentModalPlatform}_${currentModalDate}`;
+            localStorage.setItem(colorKey, "custom");
+            
+            // Refresh the calendar
+            loadPlatform(currentPlatform);
+            closeColorPickerModal();
+        }
+    }
+}
+
+function findClosestColorClass(hexColor){
+    const colorClasses = Object.keys(colorClassToHex);
+    return colorClasses[0]; // Default fallback
+}
+
+function hslToHex(h, s, l){
+    // Convert HSL to RGB
+    h = h / 360;
+    s = s / 100;
+    l = l / 100;
+    
+    let r, g, b;
+    
+    if(s === 0){
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    
+    const toHex = (x) => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    };
+    
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+function hexToHsl(hex){
+    // Remove # if present
+    hex = hex.replace(/^#/, '');
+    
+    // Parse hex to RGB
+    let r = parseInt(hex.substring(0, 2), 16) / 255;
+    let g = parseInt(hex.substring(2, 4), 16) / 255;
+    let b = parseInt(hex.substring(4, 6), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    
+    if(max === min){
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        
+        switch(max){
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / d + 2) / 6; break;
+            case b: h = ((r - g) / d + 4) / 6; break;
+        }
+    }
+    
+    return {
+        h: Math.round(h * 360),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+    };
+}
+
+function updateColorSelectorPosition(saturation, brightness){
+    const circle = document.getElementById("colorSelectorCircle");
+    const gradient = document.getElementById("colorGradient");
+    
+    if(!circle || !gradient) return;
+    
+    // Position based on saturation (0-100%) left to right
+    const x = (saturation / 100) * 100;
+    
+    // Position based on brightness (100-0%) top to bottom
+    const y = ((100 - brightness) / 100) * 100;
+    
+    circle.style.left = x + "%";
+    circle.style.top = y + "%";
+}
+
+function hslToHex(h, s, l){
+    // Convert HSL to RGB
+    h = h / 360;
+    s = s / 100;
+    l = l / 100;
+    
+    let r, g, b;
+    
+    if(s === 0){
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    
+    const toHex = (x) => {
+        const hex = Math.round(x * 255).toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    };
+    
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+function handleGradientClick(e){
+    const gradient = document.getElementById("colorGradient");
+    if(!gradient) return;
+    
+    const rect = gradient.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Calculate saturation (0-100%) from left to right
+    const saturation = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    
+    // Calculate brightness (100-0%) from top to bottom
+    const brightness = Math.max(0, Math.min(100, 100 - (y / rect.height) * 100));
+    
+    // Get current hue from slider
+    const hueSlider = document.getElementById("colorHue");
+    const hue = hueSlider ? parseInt(hueSlider.value) : 0;
+    
+    // Convert HSL to hex
+    const hexColor = hslToHex(hue, saturation, brightness);
+    
+    // Update selected color
+    currentSelectedColor = hexColor;
+    document.getElementById("hexInput").value = hexColor;
+    
+    // Update circle position
+    updateColorSelectorPosition(saturation, brightness);
+    
+    // Update preset buttons
+    document.querySelectorAll(".preset-color-btn").forEach(btn => {
+        btn.classList.remove("selected");
+    });
 }
 
 function closeModal(){
@@ -239,16 +581,29 @@ function buildCalendar(containerId, monthDays, startOffset, events, month){
         
         if(events[fullDate]){
             content = events[fullDate].text;
-            // Get unique color based on topic text
-            className = topicColors[content] || events[fullDate].class;
+            // Get color from localStorage first, then fall back to topicColors, then class
+            const colorKey = `topicColor_${currentPlatform}_${fullDate}`;
+            const savedColor = localStorage.getItem(colorKey);
+            className = savedColor || topicColors[content] || events[fullDate].class;
         }
 
         const status = getStatus(currentPlatform, fullDate);
         const statusColor = status === "done" ? "#22c55e" : status === "working" ? "#4169E1" : "#ef4444";
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+        
+        // Check for custom hex color
+        let inlineStyle = "";
+        if(className === "custom"){
+            const customColorKey = `customColor_${currentPlatform}_${fullDate}`;
+            const customHexColor = localStorage.getItem(customColorKey);
+            if(customHexColor){
+                inlineStyle = ` style="background-color: ${customHexColor};"`;
+                className = ""; // Don't apply class since we have inline style
+            }
+        }
 
         html += `
-        <div class="day ${className}" onclick="openModal(${day},'${month}')">
+        <div class="day ${className}"${inlineStyle} onclick="openModal(${day},'${month}')">
             <div class="day-header">
                 <div class="date">${day}</div>
                 <div class="status-badge" style="color: ${statusColor};">${statusLabel}</div>
@@ -302,7 +657,8 @@ function collectUpcomingEvents(){
                     class: events[dateKey].class,
                     info: platformData.info,
                     status: status,
-                    platformKey: platformName
+                    platformKey: platformName,
+                    dateKey: dateKey
                 });
             }
         });
@@ -340,7 +696,22 @@ function renderUpcomingEvents(){
             const statusLabel = event.status.charAt(0).toUpperCase() + event.status.slice(1);
             const timeMatch = event.info.match(/(\d{1,2}:\d{2}\s(?:AM|PM|BST))/);
             const postingTime = timeMatch ? timeMatch[1] : "N/A";
-            const colorClass = topicColors[event.text] || "color-1";
+            
+            // Get color from localStorage first, then fall back to topicColors
+            const colorKey = `topicColor_${event.platformKey}_${event.dateKey}`;
+            const savedColor = localStorage.getItem(colorKey);
+            let colorClass = savedColor || topicColors[event.text] || "color-1";
+            
+            // Check for custom hex color
+            let inlineStyle = "";
+            if(colorClass === "custom"){
+                const customColorKey = `customColor_${event.platformKey}_${event.dateKey}`;
+                const customHexColor = localStorage.getItem(customColorKey);
+                if(customHexColor){
+                    inlineStyle = ` style="background-color: ${customHexColor};"`;
+                    colorClass = ""; // Don't apply class since we have inline style
+                }
+            }
             
             // Collect color legend
             if (!colorLegend[event.platform]) {
@@ -349,7 +720,7 @@ function renderUpcomingEvents(){
             colorLegend[event.platform][event.text] = colorClass;
             
             html += `
-            <div class="upcoming-item ${colorClass}" onclick="openUpcomingModal('${dateKey}', '${event.platform}')">
+            <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platform}')">
                 <div class="upcoming-item-header">
                     <div class="upcoming-platform">${event.platform}</div>
                     <div class="upcoming-status" style="color: ${statusColor};">${statusLabel}</div>
@@ -507,3 +878,59 @@ function renderColorLegend(colorLegend) {
 resetAllStatuses();
 
 loadPlatform("upcoming");
+
+// ==================== Color Picker Event Listeners ====================
+document.addEventListener("DOMContentLoaded", function(){
+    // Color gradient click
+    const colorGradient = document.getElementById("colorGradient");
+    if(colorGradient){
+        colorGradient.addEventListener("click", handleGradientClick);
+    }
+    
+    // Hue slider change
+    const hueSlider = document.getElementById("colorHue");
+    if(hueSlider){
+        hueSlider.addEventListener("input", function(){
+            updateColorGradient(this.value);
+        });
+    }
+    
+    // Hex input change
+    const hexInput = document.getElementById("hexInput");
+    if(hexInput){
+        hexInput.addEventListener("input", function(){
+            let hex = this.value;
+            if(!hex.startsWith("#")){
+                hex = "#" + hex;
+            }
+            if(hex.match(/^#[0-9A-F]{6}$/i)){
+                currentSelectedColor = hex;
+                
+                // Convert hex to HSL
+                const hsl = hexToHsl(hex);
+                
+                // Update hue slider
+                document.getElementById("colorHue").value = hsl.h;
+                
+                // Update gradient to reflect new hue
+                updateColorGradient(hsl.h);
+                
+                // Update circle position
+                updateColorSelectorPosition(hsl.s, hsl.l);
+                
+                // Deselect preset buttons
+                document.querySelectorAll(".preset-color-btn").forEach(btn => {
+                    btn.classList.remove("selected");
+                });
+            }
+        });
+    }
+});
+
+// Click outside to close color picker
+document.addEventListener("click", function(e){
+    const overlay = document.getElementById("colorPickerOverlay");
+    if(overlay && overlay.classList.contains("active") && e.target === overlay){
+        closeColorPickerModal();
+    }
+});

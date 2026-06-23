@@ -59,7 +59,16 @@
         <div class="modal-date" id="modalDate"></div>
         <div class="modal-posts">
             <div class="modal-posts-title">Posts Scheduled:</div>
-            <div id="modalPostsList"></div>
+            <div id="modalPostsList" style="display: flex; align-items: center; gap: 10px; position: relative;">
+                <div id="topicDisplay" style="flex: 1;"></div>
+                <button id="colorPickerBtn" class="color-picker-btn" onclick="openColorPickerModal()" title="Change color">🎨</button>
+                <button id="editTopicBtn" class="edit-topic-btn" onclick="toggleEditTopic()" title="Edit topic">✎</button>
+            </div>
+            <div id="editTopicContainer" style="display: none; gap: 8px; margin-top: 8px;">
+                <input type="text" id="topicInput" placeholder="Enter new topic name" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <button class="save-topic-btn" onclick="saveTopicName()">Save</button>
+                <button class="cancel-topic-btn" onclick="cancelEditTopic()">Cancel</button>
+            </div>
         </div>
         <div class="modal-status">
             <label for="statusDropdown">Status:</label>
@@ -72,6 +81,37 @@
         <div class="modal-buttons">
             <button class="modal-ok" onclick="saveStatus()">OK</button>
             <button class="modal-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Color Picker Modal -->
+<div class="color-picker-overlay" id="colorPickerOverlay">
+    <div class="color-picker-modal">
+        <div class="color-picker-header">
+            <h3>Select Color</h3>
+            <button class="color-picker-close" onclick="closeColorPickerModal()">×</button>
+        </div>
+        <div class="color-picker-content">
+            <div class="color-gradient-container">
+                <div class="color-gradient" id="colorGradient">
+                    <div class="color-selector-circle" id="colorSelectorCircle"></div>
+                </div>
+                <div class="color-slider-container">
+                    <input type="range" id="colorHue" min="0" max="360" value="0" class="color-hue-slider">
+                </div>
+            </div>
+            <div class="color-presets">
+                <div class="preset-colors"></div>
+            </div>
+            <div class="color-hex-input">
+                <label>Hex Color:</label>
+                <input type="text" id="hexInput" placeholder="#000000" maxlength="7">
+            </div>
+        </div>
+        <div class="color-picker-footer">
+            <button class="color-picker-ok" onclick="applySelectedColor()">OK</button>
+            <button class="color-picker-cancel" onclick="closeColorPickerModal()">Cancel</button>
         </div>
     </div>
 </div>
