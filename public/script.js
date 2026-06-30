@@ -7,6 +7,7 @@ info:"Posting Days: Monday • Thursday<br>Posting Time: 8:00 PM BST",
 notes:"Focus on Brand Identity, Event Branding and high quality presentations.",
 events:{
 "2026-06-29":{text:"Full Brand Identity",class:"brand"},
+"2026-06-30":{text:"Weekly Recap",class:"showcase"},
 "2026-07-02":{text:"Logo Presentation",class:"logo"},
 "2026-07-06":{text:"Print Materials",class:"print"},
 "2026-07-09":{text:"Digital Assets",class:"digital"},
@@ -199,10 +200,6 @@ function buildAndroidAlarmSchedules() {
 }
 
 function syncAndroidSchedules() {
-    if (!isLocalAppMode) {
-        return;
-    }
-
     if (typeof AndroidBridge === "undefined" || typeof AndroidBridge.syncSchedules !== "function") {
         return;
     }
@@ -1219,3 +1216,8 @@ async function initializeApp() {
 
 // Start the app
 initializeApp();
+
+// ==================== Refresh Page Function ====================
+function refreshPage() {
+    location.reload();
+}

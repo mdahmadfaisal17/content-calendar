@@ -61,6 +61,22 @@ body{
     transform:translateY(0);
 }
 
+.refresh-btn{
+    background:none;
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    font-size:20px;
+    cursor:pointer;
+    padding:8px 12px;
+    transition:all 0.25s;
+    white-space:nowrap;
+}
+
+.refresh-btn:hover{
+    background:#f3f4f6;
+    transform:translateY(-2px);
+}
+
 .pills{
     display:flex;
     justify-content:center;
