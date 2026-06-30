@@ -68,6 +68,10 @@ mongodb/
 coverage/
 .nyc_output/
 
+# ==================== Android ====================
+android/local.properties
+android/.gradle/
+
 # ==================== Backups ====================
 *.bak
 *.backup

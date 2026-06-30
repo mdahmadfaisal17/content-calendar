@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Calendar</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+
+<div class="header">
+    <div class="header-content">
+        <h1>Content Calendar</h1>
+        <p>June 2026 - July 2026</p>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="pills">
+    <button class="pill active" onclick="switchTab(event,'upcoming')">
+        <img class="pill-icon" src="icon/Upcoming.png" alt="" aria-hidden="true">
+        <span>Upcoming</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'dribbble')">
+        <img class="pill-icon" src="icon/dribbble.png" alt="" aria-hidden="true">
+        <span>Dribbble</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'linkedin')">
+        <img class="pill-icon" src="icon/Linkedin.png" alt="" aria-hidden="true">
+        <span>LinkedIn</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'huefb')">
+        <img class="pill-icon" src="icon/HueSixteen.png" alt="" aria-hidden="true">
+        <span>HueSixteen</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'fafb')">
+        <img class="pill-icon" src="icon/Faysal.png" alt="" aria-hidden="true">
+        <span>Faysal</span>
+    </button>
+</div>
+
+<div class="card" id="platformCard">
+    <h2 class="platform-title" id="title"></h2>
+    <div class="platform-info" id="info"></div>
+</div>
+
+<div class="card">
+    <h3 class="month-title">June 2026</h3>
+    <div class="calendar" id="juneCalendar"></div>
+</div>
+
+<div class="card">
+    <h3 class="month-title">July 2026</h3>
+    <div class="calendar" id="julyCalendar"></div>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:10px;">Notes</h3>
+    <div class="notes" id="notes"></div>
+</div>
+
+<div class="card upcoming-section" id="upcomingSection">
+    <h2 class="platform-title">Upcoming Content</h2>
+    <p style="color:#6b7280;margin-bottom:24px;">Next 7 days</p>
+    <div class="upcoming-grid" id="upcomingGrid"></div>
+    <div class="upcoming-legend" id="upcomingLegend"></div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="modalPlatform"></div>
+        <div class="modal-date" id="modalDate"></div>
+        <div class="modal-posts">
+            <div class="modal-posts-title">Posts Scheduled:</div>
+            <div id="modalPostsList" style="display: flex; align-items: center; gap: 10px; position: relative;">
+                <div id="topicDisplay" style="flex: 1;"></div>
+                <button id="colorPickerBtn" class="color-picker-btn" onclick="openColorPickerModal()" title="Change color">🎨</button>
+                <button id="editTopicBtn" class="edit-topic-btn" onclick="toggleEditTopic()" title="Edit topic">✎</button>
+            </div>
+            <div id="editTopicContainer" style="display: none; gap: 8px; margin-top: 8px;">
+                <input type="text" id="topicInput" placeholder="Enter new topic name" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <button class="save-topic-btn" onclick="saveTopicName()">Save</button>
+                <button class="cancel-topic-btn" onclick="cancelEditTopic()">Cancel</button>
+            </div>
+        </div>
+        <div class="modal-status">
+            <label for="statusDropdown">Status:</label>
+            <select id="statusDropdown">
+                <option value="pending">Pending</option>
+                <option value="working">Working</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+        <div class="modal-note">
+            <label for="noteInput">Note:</label>
+            <textarea id="noteInput" placeholder="Add a note for this post"></textarea>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-ok" onclick="saveStatus()">OK</button>
+            <button class="modal-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Color Picker Modal -->
+<div class="color-picker-overlay" id="colorPickerOverlay">
+    <div class="color-picker-modal">
+        <div class="color-picker-header">
+            <h3>Select Color</h3>
+            <button class="color-picker-close" onclick="closeColorPickerModal()">×</button>
+        </div>
+        <div class="color-picker-content">
+            <div class="color-gradient-container">
+                <div class="color-gradient" id="colorGradient">
+                    <div class="color-selector-circle" id="colorSelectorCircle"></div>
+                </div>
+                <div class="color-slider-container">
+                    <input type="range" id="colorHue" min="0" max="360" value="0" class="color-hue-slider">
+                </div>
+            </div>
+            <div class="color-presets">
+                <div class="preset-colors"></div>
+            </div>
+            <div class="color-hex-input">
+                <label>Hex Color:</label>
+                <input type="text" id="hexInput" placeholder="#000000" maxlength="7">
+            </div>
+        </div>
+        <div class="color-picker-footer">
+            <button class="color-picker-ok" onclick="applySelectedColor()">OK</button>
+            <button class="color-picker-cancel" onclick="closeColorPickerModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
