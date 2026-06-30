@@ -2,6 +2,7 @@ const platforms = {
 
 dribbble:{
 title:"Dribbble",
+icon:"icon/dribbble.png",
 info:"Posting Days: Monday • Thursday<br>Posting Time: 8:00 PM BST",
 notes:"Focus on Brand Identity, Event Branding and high quality presentations.",
 events:{
@@ -20,6 +21,7 @@ events:{
 
 linkedin:{
 title:"LinkedIn",
+icon:"icon/Linkedin.png",
 info:"Posting Days: Tuesday • Thursday • Saturday<br>Posting Time: 7:00 PM BST",
 notes:"Share branding insights, BTS content and project showcases.",
 events:{
@@ -42,7 +44,8 @@ events:{
 },
 
 huefb:{
-title:"Hue FB",
+title:"HueSixteen",
+icon:"icon/HueSixteen.png",
 info:"Posting Days: Tuesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Engaging visual content and educational resources.",
 events:{
@@ -65,7 +68,8 @@ events:{
 },
 
 fafb:{
-title:"FA FB",
+title:"Faysal",
+icon:"icon/Faysal.png",
 info:"Posting Days: Monday • Wednesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Personal brand content and design insights.",
 events:{
@@ -665,6 +669,7 @@ function collectUpcomingEvents(){
                 const status = getStatus(platformName, dateKey);
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
+                    icon: platformData.icon,
                     text: displayText,
                     class: events[dateKey].class,
                     info: platformData.info,
@@ -734,7 +739,10 @@ function renderUpcomingEvents(){
             html += `
             <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platform}')">
                 <div class="upcoming-item-header">
-                    <div class="upcoming-platform">${event.platform}</div>
+                    <div class="upcoming-platform-wrap">
+                        <img class="upcoming-platform-icon" src="${event.icon}" alt="" aria-hidden="true">
+                        <div class="upcoming-platform">${event.platform}</div>
+                    </div>
                     <div class="upcoming-status" style="color: ${statusColor};">${statusLabel}</div>
                 </div>
                 <div class="upcoming-item-title">${event.text}</div>
@@ -808,9 +816,13 @@ function generateUpcomingNotes(){
 
 function loadPlatform(name){
 
+    const platformCard = document.getElementById("platformCard");
+
     if(name === "upcoming"){
         currentPlatform = name;
-        document.getElementById("title").innerHTML = "Upcoming Content";
+        if(platformCard){
+            platformCard.style.display = "none";
+        }
         document.getElementById("info").innerHTML = "";
         document.getElementById("notes").innerHTML = generateUpcomingNotes();
         
@@ -823,6 +835,9 @@ function loadPlatform(name){
     
     document.getElementById("upcomingSection").classList.remove("active");
     showCalendars();
+    if(platformCard){
+        platformCard.style.display = "block";
+    }
     
     currentPlatform = name;
     const data = platforms[name];
@@ -854,7 +869,7 @@ function switchTab(event,name){
     document.querySelectorAll('.pill')
     .forEach(btn=>btn.classList.remove('active'));
 
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
 
     loadPlatform(name);
 

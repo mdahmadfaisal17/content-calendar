@@ -20,14 +20,29 @@
 </div>
 
 <div class="pills">
-    <button class="pill active" onclick="switchTab(event,'upcoming')">Upcoming</button>
-    <button class="pill" onclick="switchTab(event,'dribbble')">Dribbble</button>
-    <button class="pill" onclick="switchTab(event,'linkedin')">LinkedIn</button>
-    <button class="pill" onclick="switchTab(event,'huefb')">Hue FB</button>
-    <button class="pill" onclick="switchTab(event,'fafb')">FA FB</button>
+    <button class="pill active" onclick="switchTab(event,'upcoming')">
+        <img class="pill-icon" src="icon/Upcoming.png" alt="" aria-hidden="true">
+        <span>Upcoming</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'dribbble')">
+        <img class="pill-icon" src="icon/dribbble.png" alt="" aria-hidden="true">
+        <span>Dribbble</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'linkedin')">
+        <img class="pill-icon" src="icon/Linkedin.png" alt="" aria-hidden="true">
+        <span>LinkedIn</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'huefb')">
+        <img class="pill-icon" src="icon/HueSixteen.png" alt="" aria-hidden="true">
+        <span>HueSixteen</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'fafb')">
+        <img class="pill-icon" src="icon/Faysal.png" alt="" aria-hidden="true">
+        <span>Faysal</span>
+    </button>
 </div>
 
-<div class="card">
+<div class="card" id="platformCard">
     <h2 class="platform-title" id="title"></h2>
     <div class="platform-info" id="info"></div>
 </div>
@@ -80,6 +95,10 @@
                 <option value="working">Working</option>
                 <option value="done">Done</option>
             </select>
+        </div>
+        <div class="modal-note">
+            <label for="noteInput">Note:</label>
+            <textarea id="noteInput" placeholder="Add a note for this post"></textarea>
         </div>
         <div class="modal-buttons">
             <button class="modal-ok" onclick="saveStatus()">OK</button>

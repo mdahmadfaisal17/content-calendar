@@ -2,6 +2,7 @@ const platforms = {
 
 dribbble:{
 title:"Dribbble",
+icon:"icon/dribbble.png",
 info:"Posting Days: Monday • Thursday<br>Posting Time: 8:00 PM BST",
 notes:"Focus on Brand Identity, Event Branding and high quality presentations.",
 events:{
@@ -20,6 +21,7 @@ events:{
 
 linkedin:{
 title:"LinkedIn",
+icon:"icon/Linkedin.png",
 info:"Posting Days: Tuesday • Thursday • Saturday<br>Posting Time: 7:00 PM BST",
 notes:"Share branding insights, BTS content and project showcases.",
 events:{
@@ -42,7 +44,8 @@ events:{
 },
 
 huefb:{
-title:"Hue FB",
+title:"HueSixteen",
+icon:"icon/HueSixteen.png",
 info:"Posting Days: Tuesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Engaging visual content and educational resources.",
 events:{
@@ -65,7 +68,8 @@ events:{
 },
 
 fafb:{
-title:"FA FB",
+title:"Faysal",
+icon:"icon/Faysal.png",
 info:"Posting Days: Monday • Wednesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Personal brand content and design insights.",
 events:{
@@ -137,7 +141,8 @@ async function fetchPostStatuses() {
                         _id: post._id,
                         status: post.status || 'pending',
                         topic: post.topic || null,
-                        color: post.color || null
+                        color: post.color || null,
+                        note: post.note || null
                     };
                 }
             });
@@ -148,7 +153,7 @@ async function fetchPostStatuses() {
     }
 }
 
-async function savePostStatus(platform, date, topic, status, color = null) {
+async function savePostStatus(platform, date, topic, status, color = null, note = null) {
     try {
         const key = `${platform}_${date}`;
         
@@ -160,7 +165,7 @@ async function savePostStatus(platform, date, topic, status, color = null) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ status, topic, color })
+                body: JSON.stringify({ status, topic, color, note })
             });
             
             if (response.ok) {
@@ -169,6 +174,7 @@ async function savePostStatus(platform, date, topic, status, color = null) {
                     postStatuses[key].status = status;
                     postStatuses[key].topic = topic;
                     postStatuses[key].color = color;
+                    postStatuses[key].note = note;
                     console.log(`✓ Updated ${key}: status=${status}, topic=${topic}, color=${color}`);
                 } else {
                     console.error(`✗ Backend error: ${result.error}`);
@@ -188,7 +194,8 @@ async function savePostStatus(platform, date, topic, status, color = null) {
                     date,
                     topic,
                     status,
-                    color
+                    color,
+                    note
                 })
             });
             
@@ -198,7 +205,8 @@ async function savePostStatus(platform, date, topic, status, color = null) {
                     _id: result.data._id,
                     status: status,
                     topic: topic,
-                    color: color
+                    color: color,
+                    note: note
                 };
                 console.log(`✓ Created new post for ${key}`);
             } else {
@@ -206,17 +214,21 @@ async function savePostStatus(platform, date, topic, status, color = null) {
             }
         }
         
-        // Refresh the calendar to show updated status
-        // If we came from upcoming tab, restore it; otherwise load the current platform
-        if (activeTabBeforeModal === "upcoming") {
-            loadPlatform("upcoming");
-            activeTabBeforeModal = "";
-        } else {
-            loadPlatform(currentPlatform);
-        }
     } catch (error) {
         console.error('Error saving post status:', error);
     }
+}
+
+async function refreshCurrentView() {
+    await fetchPostStatuses();
+
+    if (activeTabBeforeModal === "upcoming") {
+        loadPlatform("upcoming");
+        activeTabBeforeModal = "";
+        return;
+    }
+
+    loadPlatform(currentPlatform);
 }
 
 // ==================== Status Management ====================
@@ -236,9 +248,16 @@ function getColor(platform, date) {
     return postStatuses[key]?.color || null;
 }
 
-function saveStatus() {
+function getNote(platform, date) {
+    const key = `${platform}_${date}`;
+    return postStatuses[key]?.note || '';
+}
+
+async function saveStatus() {
     const statusDropdown = document.getElementById("statusDropdown");
     const newStatus = statusDropdown.value;
+    const noteInput = document.getElementById("noteInput");
+    const note = noteInput ? noteInput.value.trim() : '';
     
     if (currentModalDate && currentModalPlatform) {
         // Get the topic from database first, then fall back to platform events
@@ -249,7 +268,8 @@ function saveStatus() {
         // Get color to preserve it
         const currentColor = getColor(currentModalPlatform, currentModalDate);
         
-        savePostStatus(currentModalPlatform, currentModalDate, topic, newStatus, currentColor);
+        await savePostStatus(currentModalPlatform, currentModalDate, topic, newStatus, currentColor, note);
+        await refreshCurrentView();
     }
     closeModal();
 }
@@ -329,6 +349,11 @@ function openModal(day, month){
     // Set current status in dropdown
     const currentStatus = getStatus(currentPlatform, fullDate);
     document.getElementById("statusDropdown").value = currentStatus;
+
+    const noteInput = document.getElementById("noteInput");
+    if(noteInput){
+        noteInput.value = getNote(currentPlatform, fullDate);
+    }
     
     modal.classList.add("active");
 }
@@ -363,9 +388,11 @@ async function saveTopicName(){
             
             // Get the current color to preserve it
             const currentColor = getColor(currentModalPlatform, currentModalDate);
+            const currentNote = getNote(currentModalPlatform, currentModalDate);
             
             // Save to database via API
-            await savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor);
+            await savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor, currentNote);
+            await refreshCurrentView();
             
             // Close the modal to refresh with updated data
             closeModal();
@@ -482,9 +509,11 @@ async function applySelectedColor(){
             // Get the current topic from database
             const currentTopic = getTopic(currentModalPlatform, currentModalDate) || platform.events[currentModalDate].text;
             const currentStatus = getStatus(currentModalPlatform, currentModalDate);
+            const currentNote = getNote(currentModalPlatform, currentModalDate);
             
             // Save color through API
-            await savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor);
+            await savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor, currentNote);
+            await refreshCurrentView();
             
             // Close both modals to refresh with updated data
             closeColorPickerModal();
@@ -726,6 +755,7 @@ function collectUpcomingEvents(){
                 
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
+                    icon: platformData.icon,
                     text: displayText,
                     class: events[dateKey].class,
                     info: platformData.info,
@@ -790,7 +820,10 @@ function renderUpcomingEvents(){
             html += `
             <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platform}')">
                 <div class="upcoming-item-header">
-                    <div class="upcoming-platform">${event.platform}</div>
+                    <div class="upcoming-platform-wrap">
+                        <img class="upcoming-platform-icon" src="${event.icon}" alt="" aria-hidden="true">
+                        <div class="upcoming-platform">${event.platform}</div>
+                    </div>
                     <div class="upcoming-status" style="color: ${statusColor};">${statusLabel}</div>
                 </div>
                 <div class="upcoming-item-title">${event.text}</div>
@@ -890,9 +923,13 @@ function renderColorLegend(colorLegend) {
 
 function loadPlatform(name){
 
+    const platformCard = document.getElementById("platformCard");
+
     if(name === "upcoming"){
         currentPlatform = name;
-        document.getElementById("title").innerHTML = "Upcoming Content";
+        if(platformCard){
+            platformCard.style.display = "none";
+        }
         document.getElementById("info").innerHTML = "";
         document.getElementById("notes").innerHTML = generateUpcomingNotes();
         
@@ -905,6 +942,9 @@ function loadPlatform(name){
     
     document.getElementById("upcomingSection").classList.remove("active");
     showCalendars();
+    if(platformCard){
+        platformCard.style.display = "block";
+    }
     
     currentPlatform = name;
     const data = platforms[name];
@@ -992,7 +1032,7 @@ function switchTab(event,name){
     document.querySelectorAll('.pill')
     .forEach(btn=>btn.classList.remove('active'));
 
-    event.target.classList.add('active');
+    event.currentTarget.classList.add('active');
 
     loadPlatform(name);
 

@@ -48,12 +48,29 @@ body{
     cursor:pointer;
     font-weight:600;
     transition:.25s;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+    line-height:1;
+}
+
+.pill-icon{
+    width:18px;
+    height:18px;
+    object-fit:contain;
+    flex-shrink:0;
+    display:block;
 }
 
 .pill.active{
     background:#4e29ff;
     color:#fff;
     border-color:#4e29ff;
+}
+
+.pill.active .pill-icon{
+    filter:brightness(0) invert(1);
 }
 
 .card{
@@ -81,8 +98,10 @@ body{
 
 .calendar{
     display:grid;
-    grid-template-columns:repeat(7,1fr);
+    grid-template-columns:repeat(7,minmax(0,1fr));
     gap:12px;
+    width:100%;
+    min-width:0;
 }
 
 .day-name{
@@ -103,6 +122,8 @@ body{
     justify-content:space-between;
     cursor:pointer;
     transition:transform .2s, box-shadow .2s;
+    min-width:0;
+    overflow:hidden;
 }
 
 .day:not(.empty):hover{
@@ -119,27 +140,30 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    margin-bottom:12px;
-    gap:12px;
+    margin-bottom:10px;
+    gap:8px;
+    min-width:0;
 }
 
 .date{
-    font-size:48px;
+    font-size:40px;
     font-weight:800;
     line-height:1;
-    letter-spacing:-3px;
+    letter-spacing:-2px;
     color:#111827;
+    min-width:0;
 }
 
 .status-badge{
-    font-size:12px;
+    font-size:10px;
     font-weight:600;
     color:#ef4444;
-    padding:4px 10px;
-    border-radius:12px;
+    padding:3px 8px;
+    border-radius:999px;
     text-transform:uppercase;
     white-space:nowrap;
     background-color:#ffffff;
+    flex-shrink:0;
 }
 
 .day-content{
@@ -889,6 +913,21 @@ body{
     letter-spacing:0.5px;
 }
 
+.upcoming-platform-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+
+.upcoming-platform-icon{
+    width:18px;
+    height:18px;
+    object-fit:contain;
+    flex-shrink:0;
+    display:block;
+}
+
 .upcoming-item-title{
     font-size:16px;
     font-weight:700;
@@ -1086,7 +1125,7 @@ body{
 @media(max-width:768px){
 
     .calendar{
-        grid-template-columns:repeat(2,1fr);
+        grid-template-columns:repeat(1,minmax(0,1fr));
     }
 
     .day-name{
@@ -1098,7 +1137,13 @@ body{
     }
 
     .date{
-        font-size:40px;
+        font-size:32px;
+        letter-spacing:-1px;
+    }
+
+    .status-badge{
+        font-size:9px;
+        padding:2px 7px;
     }
 
     .upcoming-grid{

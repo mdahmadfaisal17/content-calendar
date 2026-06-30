@@ -29,6 +29,7 @@ router.post('/posts', isAuthenticated, async (req, res) => {
             topic: req.body.topic,
             status: req.body.status || 'pending',
             color: req.body.color || null,
+            note: req.body.note || '',
             createdAt: new Date(),
             updatedAt: new Date()
         };
@@ -55,6 +56,7 @@ router.put('/posts/:id', isAuthenticated, async (req, res) => {
         if (req.body.status) updateData.status = req.body.status;
         if (req.body.topic) updateData.topic = req.body.topic;
         if (req.body.color !== undefined) updateData.color = req.body.color;
+        if (req.body.note !== undefined) updateData.note = req.body.note;
         
         const result = await collection.updateOne(
             { _id: new ObjectId(req.params.id) },
