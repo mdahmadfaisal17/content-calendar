@@ -206,10 +206,6 @@ function collectUpcoming24HourNotifications() {
         }
 
         Object.keys(platformData.events).forEach(dateKey => {
-            const status = getStatus(platformKey, dateKey);
-            if (status === "done") {
-                return;
-            }
 
             const { dateTime, timeLabel } = parseScheduleDateTime(platformData, dateKey);
             if (dateTime <= now || dateTime > next24h) {
@@ -476,10 +472,6 @@ function buildAndroidAlarmSchedules() {
         const timeInfo = parsePlatformTime(platform.info || "");
 
         Object.keys(platform.events).forEach(dateKey => {
-            const status = getStatus(platformKey, dateKey);
-            if (status === "done") {
-                return;
-            }
 
             const scheduleDate = new Date(`${dateKey}T00:00:00`);
             scheduleDate.setHours(timeInfo.hour, timeInfo.minute, 0, 0);
