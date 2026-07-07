@@ -1246,7 +1246,9 @@ function renderUpcomingEvents(){
     
     sortedDates.forEach(dateKey => {
         const date = new Date(dateKey + 'T00:00:00');
-        const formattedDate = date.toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+        const baseDate = date.toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'});
+        const weekday = date.toLocaleDateString('en-US', {weekday: 'long'});
+        const formattedDate = `${baseDate} ${weekday}`;
         const events = eventsByDate[dateKey];
         
         html += `
