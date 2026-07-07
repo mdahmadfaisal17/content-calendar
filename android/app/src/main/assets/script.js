@@ -1161,6 +1161,7 @@ function getNext7Days(){
 }
 
 function collectUpcomingEvents(){
+    const now = new Date();
     const next7Days = getNext7Days();
     const eventsByDate = {};
     
@@ -1169,8 +1170,14 @@ function collectUpcomingEvents(){
         
         const platformData = platforms[platformName];
         const events = platformData.events;
+        const timeInfo = parsePlatformTime(platformData.info || "");
         
         Object.keys(events).forEach(dateKey => {
+            const scheduleDate = buildDateTime(dateKey, timeInfo.hour, timeInfo.minute);
+            if (scheduleDate <= now) {
+                return;
+            }
+
             const status = getStatus(platformName, dateKey);
             // Show if: within next 7 days OR status is "working"
             if(next7Days.includes(dateKey) || status === "working"){
@@ -1200,6 +1207,11 @@ function collectUpcomingEvents(){
     TEST_SCHEDULES.forEach(testItem => {
         const platformData = platforms[testItem.platformKey];
         if (!platformData || !next7Days.includes(testItem.dateKey)) {
+            return;
+        }
+
+        const scheduleDate = buildDateTime(testItem.dateKey, testItem.hour, testItem.minute);
+        if (scheduleDate <= now) {
             return;
         }
 
