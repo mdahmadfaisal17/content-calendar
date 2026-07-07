@@ -126,11 +126,32 @@ let activeTabBeforeModal = ""; // Track which tab was active before opening moda
 let postStatuses = {}; // Store status from MongoDB: { "platform_date": {_id, status} }
 const isLocalAppMode = window.location.protocol === "file:";
 const LOCAL_POST_STATUSES_KEY = "huesixteen_post_statuses";
+const TEST_SCHEDULES = [
+    { id: "test_2026_07_07_1945", platformKey: "huefb", dateKey: "2026-07-07", topic: "Test Content 1", hour: 19, minute: 45 },
+    { id: "test_2026_07_07_1950", platformKey: "huefb", dateKey: "2026-07-07", topic: "Test Content 2", hour: 19, minute: 50 },
+    { id: "test_2026_07_07_1955", platformKey: "huefb", dateKey: "2026-07-07", topic: "Test Content 3", hour: 19, minute: 55 },
+    { id: "test_2026_07_07_2000", platformKey: "huefb", dateKey: "2026-07-07", topic: "Test Content 4", hour: 20, minute: 0 },
+    { id: "test_2026_07_07_2005", platformKey: "huefb", dateKey: "2026-07-07", topic: "Test Content 5", hour: 20, minute: 5 }
+];
+let modalTopicOverride = null;
+let modalTimeOverride = "";
 const NOTIFICATION_READ_KEY = "huesixteen_notification_read_state";
 const NOTIFICATION_PUSHED_KEY = "huesixteen_notification_pushed_state";
 let notificationReadState = {};
 let notificationPushedState = {};
 let notificationItems = [];
+
+function formatTimeLabel(hour, minute) {
+    const period = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
+function buildDateTime(dateKey, hour, minute) {
+    const dateTime = new Date(`${dateKey}T00:00:00`);
+    dateTime.setHours(hour, minute, 0, 0);
+    return dateTime;
+}
 
 function loadNotificationState() {
     try {
@@ -169,8 +190,7 @@ function formatNotificationTime(dateTime) {
 
 function parseScheduleDateTime(platformData, dateKey) {
     const timeInfo = parsePlatformTime(platformData.info || "");
-    const dateTime = new Date(`${dateKey}T00:00:00`);
-    dateTime.setHours(timeInfo.hour, timeInfo.minute, 0, 0);
+    const dateTime = buildDateTime(dateKey, timeInfo.hour, timeInfo.minute);
     return { dateTime, timeLabel: timeInfo.label };
 }
 
@@ -209,6 +229,29 @@ function collectUpcoming24HourNotifications() {
                 scheduledAt: dateTime,
                 formattedAt: formatNotificationTime(dateTime)
             });
+        });
+    });
+
+    TEST_SCHEDULES.forEach(testItem => {
+        const platformData = platforms[testItem.platformKey];
+        if (!platformData) {
+            return;
+        }
+
+        const dateTime = buildDateTime(testItem.dateKey, testItem.hour, testItem.minute);
+        if (dateTime <= now || dateTime > next24h) {
+            return;
+        }
+
+        items.push({
+            id: testItem.id,
+            platformKey: testItem.platformKey,
+            platformTitle: `${platformData.title} Test`,
+            dateKey: testItem.dateKey,
+            topic: testItem.topic,
+            timeLabel: formatTimeLabel(testItem.hour, testItem.minute),
+            scheduledAt: dateTime,
+            formattedAt: formatNotificationTime(dateTime)
         });
     });
 
@@ -252,7 +295,7 @@ function getNotificationItemById(itemId) {
     return notificationItems.find(item => item.id === itemId) || null;
 }
 
-function openPlatformDateModal(platformKey, dateKey) {
+function openPlatformDateModal(platformKey, dateKey, topicOverride = null, timeOverride = "") {
     if (!platforms[platformKey]) {
         return;
     }
@@ -265,7 +308,7 @@ function openPlatformDateModal(platformKey, dateKey) {
     const day = parseInt(parts[2], 10);
     const monthName = monthCode === "06" ? "june" : "july";
 
-    openModal(day, monthName);
+    openModal(day, monthName, topicOverride, timeOverride);
 }
 
 function openNotificationItem(itemId) {
@@ -277,7 +320,7 @@ function openNotificationItem(itemId) {
     markNotificationAsRead(itemId);
     renderNotificationCenter();
     closeNotificationPanel();
-    openPlatformDateModal(item.platformKey, item.dateKey);
+    openPlatformDateModal(item.platformKey, item.dateKey, item.topic, item.timeLabel);
 }
 
 function sendBrowserNotifications(currentItems) {
@@ -452,6 +495,26 @@ function buildAndroidAlarmSchedules() {
                 dateTime: `${dateKey}T${String(timeInfo.hour).padStart(2, '0')}:${String(timeInfo.minute).padStart(2, '0')}:00`,
                 timeLabel: timeInfo.label
             });
+        });
+    });
+
+    TEST_SCHEDULES.forEach(testItem => {
+        const platform = platforms[testItem.platformKey];
+        if (!platform) {
+            return;
+        }
+
+        const scheduleDate = buildDateTime(testItem.dateKey, testItem.hour, testItem.minute);
+        if (scheduleDate <= now) {
+            return;
+        }
+
+        schedules.push({
+            id: testItem.id,
+            platformTitle: `${platform.title} Test`,
+            topic: testItem.topic,
+            dateTime: `${testItem.dateKey}T${String(testItem.hour).padStart(2, '0')}:${String(testItem.minute).padStart(2, '0')}:00`,
+            timeLabel: formatTimeLabel(testItem.hour, testItem.minute)
         });
     });
 
@@ -642,14 +705,17 @@ async function saveStatus() {
 
 // ==================== Modal Management ====================
 
-function openUpcomingModal(dateKey, platformKey) {
+function openUpcomingModal(dateKey, platformKey, topicOverride = null, timeOverride = "") {
     // Find the platform data
-    let platformName = "";
-    Object.keys(platforms).forEach(key => {
-        if(platforms[key].title === platformKey) {
-            platformName = key;
-        }
-    });
+    let platformName = platforms[platformKey] ? platformKey : "";
+
+    if(!platformName){
+        Object.keys(platforms).forEach(key => {
+            if(platforms[key].title === platformKey) {
+                platformName = key;
+            }
+        });
+    }
     
     if(!platformName) return;
     
@@ -661,7 +727,6 @@ function openUpcomingModal(dateKey, platformKey) {
     
     // Parse the date (format: 2026-06-29)
     const dateParts = dateKey.split('-');
-    const year = dateParts[0];
     const monthNum = dateParts[1];
     const day = parseInt(dateParts[2]);
     
@@ -669,12 +734,15 @@ function openUpcomingModal(dateKey, platformKey) {
     const month = monthNum === "06" ? "june" : "july";
     
     // Open the modal
-    openModal(day, month);
+    openModal(day, month, topicOverride, timeOverride);
 }
 
-function openModal(day, month){
+function openModal(day, month, topicOverride = null, timeOverride = ""){
     const modal = document.getElementById("modal");
     const platform = platforms[currentPlatform];
+
+    modalTopicOverride = topicOverride;
+    modalTimeOverride = timeOverride;
     
     document.getElementById("modalPlatform").innerHTML = platform.title;
     document.getElementById("modalDate").innerHTML = `${month.charAt(0).toUpperCase() + month.slice(1)} ${day}, 2026`;
@@ -688,10 +756,10 @@ function openModal(day, month){
     currentModalPlatform = currentPlatform;
     
     // Display topic or "No posts" message
-    if(events[fullDate]){
+    if(events[fullDate] || modalTopicOverride){
         // Get topic from database first, then fall back to original topic
         const dbTopic = getTopic(currentPlatform, fullDate);
-        const displayTopic = dbTopic || events[fullDate].text;
+        const displayTopic = modalTopicOverride || dbTopic || events[fullDate]?.text || "Scheduled content";
         topicDisplay = `<div class="modal-post-item">${displayTopic}</div>`;
     } else {
         topicDisplay = `<div class="modal-no-posts">No posts scheduled for this day</div>`;
@@ -1012,6 +1080,8 @@ function handleGradientClick(e){
 }
 
 function closeModal(){
+    modalTopicOverride = null;
+    modalTimeOverride = "";
     document.getElementById("modal").classList.remove("active");
 }
 
@@ -1118,6 +1188,7 @@ function collectUpcomingEvents(){
                 // Get topic from database first, then from events
                 const dbTopic = getTopic(platformName, dateKey);
                 const displayText = dbTopic || events[dateKey].text;
+                const timeInfo = parsePlatformTime(platformData.info || "");
                 
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
@@ -1127,9 +1198,33 @@ function collectUpcomingEvents(){
                     info: platformData.info,
                     status: status,
                     platformKey: platformName,
-                    dateKey: dateKey
+                    dateKey: dateKey,
+                    timeLabel: timeInfo.label
                 });
             }
+        });
+    });
+
+    TEST_SCHEDULES.forEach(testItem => {
+        const platformData = platforms[testItem.platformKey];
+        if (!platformData || !next7Days.includes(testItem.dateKey)) {
+            return;
+        }
+
+        if (!eventsByDate[testItem.dateKey]) {
+            eventsByDate[testItem.dateKey] = [];
+        }
+
+        eventsByDate[testItem.dateKey].push({
+            platform: `${platformData.title} Test`,
+            icon: platformData.icon,
+            text: testItem.topic,
+            class: "insight",
+            info: platformData.info,
+            status: "pending",
+            platformKey: testItem.platformKey,
+            dateKey: testItem.dateKey,
+            timeLabel: formatTimeLabel(testItem.hour, testItem.minute)
         });
     });
     
@@ -1164,7 +1259,7 @@ function renderUpcomingEvents(){
             const statusColor = event.status === "done" ? "#22c55e" : event.status === "working" ? "#4169E1" : "#ef4444";
             const statusLabel = event.status.charAt(0).toUpperCase() + event.status.slice(1);
             const timeMatch = event.info.match(/(\d{1,2}:\d{2}\s(?:AM|PM|BST))/);
-            const postingTime = timeMatch ? timeMatch[1] : "N/A";
+            const postingTime = event.timeLabel || (timeMatch ? timeMatch[1] : "N/A");
             
             // Get color from database first, then fall back to topicColors
             const dbColor = getColor(event.platformKey, event.dateKey);
@@ -1182,9 +1277,12 @@ function renderUpcomingEvents(){
                 colorLegend[event.platform] = {};
             }
             colorLegend[event.platform][event.text] = colorClass;
+
+            const escapedTopic = event.text.replace(/'/g, "\\'");
+            const escapedTime = postingTime.replace(/'/g, "\\'");
             
             html += `
-            <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platform}')">
+            <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platformKey}', '${escapedTopic}', '${escapedTime}')">
                 <div class="upcoming-item-header">
                     <div class="upcoming-platform-wrap">
                         <img class="upcoming-platform-icon" src="${event.icon}" alt="" aria-hidden="true">
