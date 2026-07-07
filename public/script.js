@@ -126,6 +126,265 @@ let activeTabBeforeModal = ""; // Track which tab was active before opening moda
 let postStatuses = {}; // Store status from MongoDB: { "platform_date": {_id, status} }
 const isLocalAppMode = window.location.protocol === "file:";
 const LOCAL_POST_STATUSES_KEY = "huesixteen_post_statuses";
+const NOTIFICATION_READ_KEY = "huesixteen_notification_read_state";
+const NOTIFICATION_PUSHED_KEY = "huesixteen_notification_pushed_state";
+let notificationReadState = {};
+let notificationPushedState = {};
+let notificationItems = [];
+
+function loadNotificationState() {
+    try {
+        const rawRead = localStorage.getItem(NOTIFICATION_READ_KEY);
+        notificationReadState = rawRead ? JSON.parse(rawRead) : {};
+    } catch (error) {
+        console.error("Error loading notification read state:", error);
+        notificationReadState = {};
+    }
+
+    try {
+        const rawPushed = localStorage.getItem(NOTIFICATION_PUSHED_KEY);
+        notificationPushedState = rawPushed ? JSON.parse(rawPushed) : {};
+    } catch (error) {
+        console.error("Error loading notification push state:", error);
+        notificationPushedState = {};
+    }
+}
+
+function persistNotificationReadState() {
+    localStorage.setItem(NOTIFICATION_READ_KEY, JSON.stringify(notificationReadState));
+}
+
+function persistNotificationPushedState() {
+    localStorage.setItem(NOTIFICATION_PUSHED_KEY, JSON.stringify(notificationPushedState));
+}
+
+function formatNotificationTime(dateTime) {
+    return dateTime.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+    });
+}
+
+function parseScheduleDateTime(platformData, dateKey) {
+    const timeInfo = parsePlatformTime(platformData.info || "");
+    const dateTime = new Date(`${dateKey}T00:00:00`);
+    dateTime.setHours(timeInfo.hour, timeInfo.minute, 0, 0);
+    return { dateTime, timeLabel: timeInfo.label };
+}
+
+function collectUpcoming24HourNotifications() {
+    const now = new Date();
+    const next24h = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+    const items = [];
+
+    Object.keys(platforms).forEach(platformKey => {
+        const platformData = platforms[platformKey];
+        if (!platformData || !platformData.events) {
+            return;
+        }
+
+        Object.keys(platformData.events).forEach(dateKey => {
+            const status = getStatus(platformKey, dateKey);
+            if (status === "done") {
+                return;
+            }
+
+            const { dateTime, timeLabel } = parseScheduleDateTime(platformData, dateKey);
+            if (dateTime <= now || dateTime > next24h) {
+                return;
+            }
+
+            const topic = getTopic(platformKey, dateKey) || platformData.events[dateKey].text;
+            const id = `${platformKey}_${dateKey}`;
+
+            items.push({
+                id,
+                platformKey,
+                platformTitle: platformData.title,
+                dateKey,
+                topic,
+                timeLabel,
+                scheduledAt: dateTime,
+                formattedAt: formatNotificationTime(dateTime)
+            });
+        });
+    });
+
+    return items.sort((a, b) => a.scheduledAt - b.scheduledAt);
+}
+
+function pruneNotificationState(currentItems) {
+    const activeIds = new Set(currentItems.map(item => item.id));
+    let dirtyRead = false;
+    let dirtyPushed = false;
+
+    Object.keys(notificationReadState).forEach(id => {
+        if (!activeIds.has(id)) {
+            delete notificationReadState[id];
+            dirtyRead = true;
+        }
+    });
+
+    Object.keys(notificationPushedState).forEach(id => {
+        if (!activeIds.has(id)) {
+            delete notificationPushedState[id];
+            dirtyPushed = true;
+        }
+    });
+
+    if (dirtyRead) {
+        persistNotificationReadState();
+    }
+
+    if (dirtyPushed) {
+        persistNotificationPushedState();
+    }
+}
+
+function markNotificationAsRead(itemId) {
+    notificationReadState[itemId] = true;
+    persistNotificationReadState();
+}
+
+function getNotificationItemById(itemId) {
+    return notificationItems.find(item => item.id === itemId) || null;
+}
+
+function openPlatformDateModal(platformKey, dateKey) {
+    if (!platforms[platformKey]) {
+        return;
+    }
+
+    activeTabBeforeModal = currentPlatform;
+    currentPlatform = platformKey;
+
+    const parts = dateKey.split("-");
+    const monthCode = parts[1];
+    const day = parseInt(parts[2], 10);
+    const monthName = monthCode === "06" ? "june" : "july";
+
+    openModal(day, monthName);
+}
+
+function openNotificationItem(itemId) {
+    const item = getNotificationItemById(itemId);
+    if (!item) {
+        return;
+    }
+
+    markNotificationAsRead(itemId);
+    renderNotificationCenter();
+    closeNotificationPanel();
+    openPlatformDateModal(item.platformKey, item.dateKey);
+}
+
+function sendBrowserNotifications(currentItems) {
+    if (typeof Notification === "undefined") {
+        return;
+    }
+
+    if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+        return;
+    }
+
+    if (Notification.permission !== "granted") {
+        return;
+    }
+
+    currentItems.forEach(item => {
+        if (notificationPushedState[item.id]) {
+            return;
+        }
+
+        const notif = new Notification(`${item.platformTitle} post reminder`, {
+            body: `${item.topic} at ${item.timeLabel}`,
+            tag: `content-calendar-${item.id}`
+        });
+
+        notif.onclick = () => {
+            window.focus();
+            openNotificationItem(item.id);
+            notif.close();
+        };
+
+        notificationPushedState[item.id] = true;
+    });
+
+    persistNotificationPushedState();
+}
+
+function renderNotificationCenter() {
+    const list = document.getElementById("notificationList");
+    const count = document.getElementById("notificationCount");
+    const total = document.getElementById("notificationTotal");
+    if (!list || !count || !total) {
+        return;
+    }
+
+    const unreadCount = notificationItems.filter(item => !notificationReadState[item.id]).length;
+    total.textContent = `${notificationItems.length}`;
+    count.textContent = `${unreadCount}`;
+    count.classList.toggle("visible", unreadCount > 0);
+
+    if (notificationItems.length === 0) {
+        list.innerHTML = '<div class="notification-empty">No pending content in the next 24 hours.</div>';
+        return;
+    }
+
+    let html = "";
+    notificationItems.forEach(item => {
+        const isRead = !!notificationReadState[item.id];
+        html += `
+        <div class="notification-item ${isRead ? "read" : "unread"}" onclick="openNotificationItem('${item.id}')">
+            <div class="notification-item-header">
+                <div class="notification-item-platform">${item.platformTitle}</div>
+                <div class="notification-read-status">${isRead ? "Read" : "Unread"}</div>
+            </div>
+            <div class="notification-item-title">${item.topic}</div>
+            <div class="notification-item-time">${item.formattedAt}</div>
+        </div>
+        `;
+    });
+
+    list.innerHTML = html;
+}
+
+function refreshNotificationCenter() {
+    notificationItems = collectUpcoming24HourNotifications();
+    pruneNotificationState(notificationItems);
+    sendBrowserNotifications(notificationItems);
+    renderNotificationCenter();
+}
+
+function toggleNotificationPanel(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    const panel = document.getElementById("notificationPanel");
+    const button = document.getElementById("notificationBtn");
+    if (!panel || !button) {
+        return;
+    }
+
+    const willOpen = !panel.classList.contains("active");
+    panel.classList.toggle("active", willOpen);
+    button.classList.toggle("active", willOpen);
+}
+
+function closeNotificationPanel() {
+    const panel = document.getElementById("notificationPanel");
+    const button = document.getElementById("notificationBtn");
+    if (!panel || !button) {
+        return;
+    }
+
+    panel.classList.remove("active");
+    button.classList.remove("active");
+}
 
 function loadLocalPostStatuses() {
     try {
@@ -335,6 +594,7 @@ async function refreshCurrentView() {
     }
 
     loadPlatform(currentPlatform);
+    refreshNotificationCenter();
 }
 
 // ==================== Status Management ====================
@@ -1079,6 +1339,19 @@ function loadPlatform(name){
 
 // ==================== Color Picker Event Listeners ====================
 document.addEventListener("DOMContentLoaded", function() {
+    loadNotificationState();
+
+    document.addEventListener("click", function(event) {
+        const center = document.getElementById("notificationCenter");
+        if (!center) {
+            return;
+        }
+
+        if (!center.contains(event.target)) {
+            closeNotificationPanel();
+        }
+    });
+
     // Color gradient click
     const colorGradient = document.getElementById("colorGradient");
     if(colorGradient){
@@ -1211,6 +1484,8 @@ async function initializeApp() {
     await fetchPostStatuses();
     syncAndroidSchedules();
     loadPlatform("upcoming");
+    refreshNotificationCenter();
+    setInterval(refreshNotificationCenter, 60 * 1000);
     console.log('✓ App initialized');
 }
 
@@ -1220,4 +1495,21 @@ initializeApp();
 // ==================== Refresh Page Function ====================
 function refreshPage() {
     location.reload();
+}
+
+function updateApp() {
+    const cacheBust = Date.now();
+
+    if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.forceUpdate === "function") {
+        try {
+            AndroidBridge.forceUpdate();
+            return;
+        } catch (error) {
+            console.error("Android force update failed:", error);
+        }
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("v", String(cacheBust));
+    window.location.replace(url.toString());
 }

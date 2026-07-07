@@ -29,6 +29,14 @@ body{
     flex:1;
 }
 
+.header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
 .header h1{
     font-size:48px;
     font-weight:700;
@@ -75,6 +83,198 @@ body{
 .refresh-btn:hover{
     background:#f3f4f6;
     transform:translateY(-2px);
+}
+
+.update-btn{
+    border:1px solid #16a34a;
+    background:#22c55e;
+    color:#fff;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .25s;
+    white-space:nowrap;
+}
+
+.update-btn:hover{
+    background:#16a34a;
+    transform:translateY(-2px);
+}
+
+.notification-center{
+    position:relative;
+}
+
+.notification-btn{
+    position:relative;
+    width:44px;
+    height:44px;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    background:#fff;
+    cursor:pointer;
+    transition:all .25s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.notification-btn:hover,
+.notification-btn.active{
+    transform:translateY(-2px);
+    border-color:#4e29ff;
+    box-shadow:0 10px 24px rgba(78,41,255,0.14);
+}
+
+.notification-icon{
+    font-size:19px;
+    line-height:1;
+}
+
+.notification-count{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    min-width:20px;
+    height:20px;
+    border-radius:999px;
+    background:#ef4444;
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:0 6px;
+    border:2px solid #fff;
+}
+
+.notification-count.visible{
+    display:flex;
+}
+
+.notification-panel{
+    position:absolute;
+    top:54px;
+    right:0;
+    width:360px;
+    max-height:420px;
+    overflow:auto;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    box-shadow:0 18px 48px rgba(0,0,0,0.15);
+    padding:14px;
+    display:none;
+    z-index:1500;
+}
+
+.notification-panel.active{
+    display:block;
+}
+
+.notification-panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+    padding-bottom:10px;
+    border-bottom:1px solid #f1f5f9;
+}
+
+.notification-panel-header h3{
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:#4e29ff;
+}
+
+.notification-total{
+    font-size:12px;
+    font-weight:700;
+    color:#6b7280;
+}
+
+.notification-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.notification-item{
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#fff;
+    cursor:pointer;
+    transition:all .2s;
+}
+
+.notification-item:hover{
+    border-color:#c7d2fe;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+    transform:translateY(-1px);
+}
+
+.notification-item.unread{
+    border-color:#4e29ff;
+    background:#f7f4ff;
+}
+
+.notification-item.read{
+    opacity:0.78;
+}
+
+.notification-item-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:6px;
+}
+
+.notification-item-platform{
+    font-size:12px;
+    font-weight:700;
+    color:#4e29ff;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+}
+
+.notification-read-status{
+    font-size:11px;
+    font-weight:700;
+    color:#6b7280;
+    text-transform:uppercase;
+}
+
+.notification-item.unread .notification-read-status{
+    color:#ef4444;
+}
+
+.notification-item-title{
+    font-size:14px;
+    font-weight:700;
+    color:#111827;
+    line-height:1.4;
+}
+
+.notification-item-time{
+    margin-top:4px;
+    font-size:12px;
+    color:#6b7280;
+}
+
+.notification-empty{
+    font-size:14px;
+    color:#6b7280;
+    border:1px dashed #d1d5db;
+    border-radius:12px;
+    padding:18px 14px;
+    text-align:center;
 }
 
 .pills{
@@ -1214,8 +1414,27 @@ body{
         text-align:center;
     }
 
+    .header-actions{
+        width:100%;
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+
     .logout-btn{
         width:100%;
+        order:4;
+    }
+
+    .update-btn,
+    .refresh-btn,
+    .notification-center{
+        order:1;
+    }
+
+    .notification-panel{
+        width:min(92vw, 360px);
+        right:50%;
+        transform:translateX(50%);
     }
 
     .calendar{

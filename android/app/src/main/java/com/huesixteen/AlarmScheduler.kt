@@ -101,6 +101,19 @@ object AlarmScheduler {
         val triggerAt = alarm.dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val pendingIntent = buildPendingIntent(context, alarm)
+        val showIntent = PendingIntent.getActivity(
+            context,
+            alarm.id.hashCode(),
+            Intent(context, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, showIntent), pendingIntent)
+            return
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
             alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)

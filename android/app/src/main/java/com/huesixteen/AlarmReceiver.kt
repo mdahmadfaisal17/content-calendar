@@ -2,12 +2,15 @@ package com.huesixteen
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.pm.PackageManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.Manifest
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -18,9 +21,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val timeLabel = intent.getStringExtra(EXTRA_TIME_LABEL) ?: ""
         val message = if (timeLabel.isBlank()) "$title: $topic" else "$title: $topic at $timeLabel"
 
-        AlarmNotification.show(context, title, message, ruleId)
-        AlarmScheduler.markDelivered(context, ruleId)
-
         val launchIntent = Intent(context, AlarmActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(EXTRA_TITLE, title)
@@ -28,7 +28,15 @@ class AlarmReceiver : BroadcastReceiver() {
             putExtra(EXTRA_TOPIC, topic)
             putExtra(EXTRA_TIME_LABEL, timeLabel)
         }
-        context.startActivity(launchIntent)
+
+        try {
+            context.startActivity(launchIntent)
+        } catch (_: Exception) {
+            // Alarm must continue via notification path even if activity launch is blocked.
+        }
+
+        AlarmNotification.show(context, title, message, ruleId)
+        AlarmScheduler.markDelivered(context, ruleId)
     }
 
     companion object {
@@ -44,6 +52,12 @@ object AlarmNotification {
     private const val CHANNEL_ID = "huesixteen_alarm_channel"
 
     fun show(context: Context, title: String, message: String, ruleId: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+
         ensureChannel(context)
 
         val contentIntent = Intent(context, AlarmActivity::class.java).apply {

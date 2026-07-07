@@ -71,6 +71,9 @@ coverage/
 # ==================== Android ====================
 android/local.properties
 android/.gradle/
+android/keystore.properties
+android/*.jks
+android/*.keystore
 
 # ==================== Backups ====================
 *.bak

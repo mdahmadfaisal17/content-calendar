@@ -16,8 +16,24 @@
         <h1>Content Calendar</h1>
         <p>June 2026 - July 2026</p>
     </div>
-    <button class="logout-btn" onclick="logout()">Logout</button>
-    <button class="refresh-btn" onclick="refreshPage()" title="Refresh">🔄</button>
+    <div class="header-actions">
+        <div class="notification-center" id="notificationCenter">
+            <button class="notification-btn" id="notificationBtn" title="Upcoming in 24 hours" onclick="toggleNotificationPanel(event)">
+                <span class="notification-icon">🔔</span>
+                <span class="notification-count" id="notificationCount">0</span>
+            </button>
+            <div class="notification-panel" id="notificationPanel">
+                <div class="notification-panel-header">
+                    <h3>Upcoming 24 Hours</h3>
+                    <span class="notification-total" id="notificationTotal">0</span>
+                </div>
+                <div class="notification-list" id="notificationList"></div>
+            </div>
+        </div>
+        <button class="update-btn" onclick="updateApp()" title="Load latest update">Update</button>
+        <button class="refresh-btn" onclick="refreshPage()" title="Refresh">🔄</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
 </div>
 
 <div class="pills">
