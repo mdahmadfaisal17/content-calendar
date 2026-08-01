@@ -45,7 +45,7 @@ events:{
 
 huefb:{
 title:"HueSixteen",
-icon:"icon/HueSixteen.png",
+icon:"icon/facebook.png",
 info:"Posting Days: Tuesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Engaging visual content and educational resources.",
 events:{
@@ -69,7 +69,7 @@ events:{
 
 fafb:{
 title:"Faysal",
-icon:"icon/Faysal.png",
+icon:"icon/facebook.png",
 info:"Posting Days: Monday • Wednesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Personal brand content and design insights.",
 events:{
@@ -192,6 +192,7 @@ let currentMonth = "";
 let allEvents = {};
 let currentModalDate = "";
 let currentModalPlatform = "";
+let modalOpenedFromUpcoming = false;
 
 // Load status from localStorage
 function getStatus(platform, date) {
@@ -221,21 +222,25 @@ function saveStatus() {
     if (currentModalDate && currentModalPlatform) {
         setStatus(currentModalPlatform, currentModalDate, newStatus);
         // Refresh calendar to show updated status
-        loadPlatform(currentPlatform);
+        loadPlatform(modalOpenedFromUpcoming ? "upcoming" : currentPlatform);
     }
     closeModal();
 }
 
 function openUpcomingModal(dateKey, platformKey) {
     // Find the platform data
-    let platformName = "";
-    Object.keys(platforms).forEach(key => {
-        if(platforms[key].title === platformKey) {
-            platformName = key;
-        }
-    });
+    let platformName = platforms[platformKey] ? platformKey : "";
+    if(!platformName){
+        Object.keys(platforms).forEach(key => {
+            if(platforms[key].title === platformKey) {
+                platformName = key;
+            }
+        });
+    }
     
     if(!platformName) return;
+
+    modalOpenedFromUpcoming = document.getElementById("upcomingSection")?.classList.contains("active") || false;
     
     // Set current platform
     currentPlatform = platformName;
@@ -339,7 +344,7 @@ function saveTopicName(){
             cancelEditTopic();
             
             // Refresh the calendar
-            loadPlatform(currentPlatform);
+            loadPlatform(modalOpenedFromUpcoming ? "upcoming" : currentPlatform);
         }
     }
 }
@@ -465,7 +470,7 @@ function applySelectedColor(){
             localStorage.setItem(colorKey, "custom");
             
             // Refresh the calendar
-            loadPlatform(currentPlatform);
+            loadPlatform(modalOpenedFromUpcoming ? "upcoming" : currentPlatform);
             closeColorPickerModal();
         }
     }
@@ -630,6 +635,7 @@ function handleGradientClick(e){
 }
 
 function closeModal(){
+    modalOpenedFromUpcoming = false;
     document.getElementById("modal").classList.remove("active");
 }
 
@@ -729,7 +735,10 @@ function collectUpcomingEvents(){
         const events = platformData.events;
         
         Object.keys(events).forEach(dateKey => {
-            if(next7Days.includes(dateKey)){
+            const status = getStatus(platformName, dateKey);
+            const isWorking = status === "working";
+
+            if(next7Days.includes(dateKey) || isWorking){
                 if(!eventsByDate[dateKey]){
                     eventsByDate[dateKey] = [];
                 }
@@ -738,7 +747,6 @@ function collectUpcomingEvents(){
                 const savedTopic = localStorage.getItem(topicKey);
                 const displayText = savedTopic || events[dateKey].text;
                 
-                const status = getStatus(platformName, dateKey);
                 eventsByDate[dateKey].push({
                     platform: platformData.title,
                     icon: platformData.icon,
@@ -809,7 +817,7 @@ function renderUpcomingEvents(){
             colorLegend[event.platform][event.text] = colorClass;
             
             html += `
-            <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platform}')">
+            <div class="upcoming-item ${colorClass}"${inlineStyle} onclick="openUpcomingModal('${event.dateKey}', '${event.platformKey}')">
                 <div class="upcoming-item-header">
                     <div class="upcoming-platform-wrap">
                         <img class="upcoming-platform-icon" src="${event.icon}" alt="" aria-hidden="true">

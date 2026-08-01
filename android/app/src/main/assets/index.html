@@ -11,41 +11,80 @@
 
 <div class="container">
 
+<header class="top-header-bar" role="navigation" aria-label="Primary menu">
+    <div class="top-header-inner">
+        <div class="top-header-left">
+            <img class="top-brand-logo" src="icon/HueSixteen.png" alt="HueSixteen logo">
+            <span class="top-brand-name">HueSixteen</span>
+        </div>
+        <nav class="top-header-middle" aria-label="Primary menu links">
+            <a class="top-menu-link active" href="index.html" aria-current="page">Content Calendar</a>
+            <a class="top-menu-link" href="client.html">Clients</a>
+        </nav>
+        <div class="top-header-right">
+            <div class="notification-center" id="notificationCenter">
+                <button class="notification-btn" id="notificationBtn" title="Upcoming in 24 hours" onclick="toggleNotificationPanel(event)">
+                    <svg class="icon-svg icon-bell" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14.5 17H5.5a.5.5 0 0 1-.42-.78L6.5 14V10a5.5 5.5 0 0 1 11 0v4l1.42 2.22a.5.5 0 0 1-.42.78h-4" />
+                        <path d="M10 19a2 2 0 0 0 4 0" />
+                    </svg>
+                    <span class="notification-count" id="notificationCount">0</span>
+                </button>
+                <div class="notification-panel" id="notificationPanel">
+                    <div class="notification-panel-header">
+                        <h3>Upcoming 24 Hours</h3>
+                        <span class="notification-total" id="notificationTotal">0</span>
+                    </div>
+                    <div class="notification-list" id="notificationList"></div>
+                </div>
+            </div>
+            <div class="profile-menu" id="profileMenu">
+                <button class="profile-btn" id="profileBtn" type="button" title="Profile options" onclick="toggleProfileMenu(event)">
+                    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5" />
+                        <path d="M5 20a7 7 0 0 1 14 0" />
+                    </svg>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <button class="profile-dropdown-item" type="button" onclick="closeProfileMenu(); refreshPage();">Refresh</button>
+                    <button class="profile-dropdown-item danger" type="button" onclick="closeProfileMenu(); logout();">Logout</button>
+                </div>
+            </div>
+            <div class="header-menu-wrap">
+                <button class="header-menu-btn" id="headerMenuBtn" type="button" aria-label="Open menu" onclick="toggleHeaderDrawer(event)">
+                    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 17h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="handleMobileDrawerOverlay(event)">
+    <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile menu">
+        <div class="mobile-drawer-head">
+            <span class="mobile-drawer-title">Menu</span>
+            <button class="mobile-drawer-close" type="button" aria-label="Close menu" onclick="closeHeaderDrawer()">×</button>
+        </div>
+        <nav class="mobile-drawer-nav" aria-label="Mobile primary menu">
+            <a class="mobile-drawer-link active" href="index.html" aria-current="page" onclick="closeHeaderDrawer()">Content Calendar</a>
+            <a class="mobile-drawer-link" href="client.html" onclick="closeHeaderDrawer()">Clients</a>
+        </nav>
+    </aside>
+</div>
+
 <div class="header">
     <div class="header-content">
         <h1>Content Calendar</h1>
         <p>June 2026 - September 2026</p>
     </div>
-    <div class="header-actions">
-        <div class="notification-center" id="notificationCenter">
-            <button class="notification-btn" id="notificationBtn" title="Upcoming in 24 hours" onclick="toggleNotificationPanel(event)">
-                <svg class="icon-svg icon-bell" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14.5 17H5.5a.5.5 0 0 1-.42-.78L6.5 14V10a5.5 5.5 0 0 1 11 0v4l1.42 2.22a.5.5 0 0 1-.42.78h-4" />
-                    <path d="M10 19a2 2 0 0 0 4 0" />
-                </svg>
-                <span class="notification-count" id="notificationCount">0</span>
-            </button>
-            <div class="notification-panel" id="notificationPanel">
-                <div class="notification-panel-header">
-                    <h3>Upcoming 24 Hours</h3>
-                    <span class="notification-total" id="notificationTotal">0</span>
-                </div>
-                <div class="notification-list" id="notificationList"></div>
-            </div>
-        </div>
-        <button class="update-btn" onclick="updateApp()" title="Load latest update">Update</button>
-        <button class="refresh-btn" onclick="refreshPage()" title="Refresh">
-            <svg class="icon-svg icon-refresh" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 12a8 8 0 1 1-2.34-5.66" />
-                <path d="M20 4v6h-6" />
-            </svg>
-        </button>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
 </div>
 
 <div class="pills">
-    <button class="pill active" onclick="switchTab(event,'upcoming')">
+    <button class="pill upcoming-pill active" onclick="switchTab(event,'upcoming')">
         <img class="pill-icon" src="icon/Upcoming.png" alt="" aria-hidden="true">
         <span>Upcoming</span>
     </button>
@@ -53,17 +92,29 @@
         <img class="pill-icon" src="icon/dribbble.png" alt="" aria-hidden="true">
         <span>Dribbble</span>
     </button>
+    <button class="pill" onclick="switchTab(event,'fafb')">
+        <img class="pill-icon" src="icon/facebook.png" alt="" aria-hidden="true">
+        <span>Faysal</span>
+    </button>
     <button class="pill" onclick="switchTab(event,'linkedin')">
         <img class="pill-icon" src="icon/Linkedin.png" alt="" aria-hidden="true">
-        <span>LinkedIn</span>
+        <span>Faysal</span>
     </button>
     <button class="pill" onclick="switchTab(event,'huefb')">
-        <img class="pill-icon" src="icon/HueSixteen.png" alt="" aria-hidden="true">
+        <img class="pill-icon" src="icon/facebook.png" alt="" aria-hidden="true">
         <span>HueSixteen</span>
     </button>
-    <button class="pill" onclick="switchTab(event,'fafb')">
-        <img class="pill-icon" src="icon/Faysal.png" alt="" aria-hidden="true">
-        <span>Faysal</span>
+    <button class="pill" onclick="switchTab(event,'hueig')">
+        <img class="pill-icon" src="icon/instagram.png" alt="" aria-hidden="true">
+        <span>Hue Sixteen</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'hueli')">
+        <img class="pill-icon" src="icon/Linkedin.png" alt="" aria-hidden="true">
+        <span>Hue Sixteen</span>
+    </button>
+    <button class="pill" onclick="switchTab(event,'hueth')">
+        <img class="pill-icon" src="icon/threads.webp" alt="" aria-hidden="true">
+        <span>Hue Sixteen</span>
     </button>
 </div>
 

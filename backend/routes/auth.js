@@ -8,6 +8,13 @@ const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD;
 
 // POST /api/auth/login
 router.post('/login', (req, res) => {
+    if (!LOGIN_EMAIL || !LOGIN_PASSWORD) {
+        return res.status(500).json({
+            success: false,
+            message: 'Server authentication is not configured.'
+        });
+    }
+
     const { email, password } = req.body;
 
     // Validate credentials

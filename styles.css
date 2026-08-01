@@ -16,6 +16,59 @@ body{
     margin:auto;
 }
 
+.top-header-bar{
+    background:linear-gradient(90deg,#e6f7ff 0%,#edf2ff 100%);
+    border:1px solid #dbeafe;
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:22px;
+}
+
+.top-header-inner{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:24px;
+    flex-wrap:wrap;
+}
+
+.top-menu-link{
+    text-decoration:none;
+    color:#334155;
+    font-size:15px;
+    font-weight:600;
+    padding:0;
+    background:none;
+    border:none;
+    transition:color .2s;
+}
+
+.top-menu-link:hover{
+    color:#4e29ff;
+}
+
+.top-menu-link.active{
+    color:#0f172a;
+    text-decoration:underline;
+    text-underline-offset:6px;
+    text-decoration-thickness:2px;
+}
+
+.client-hero{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:24px;
+    padding:56px 24px;
+    text-align:center;
+}
+
+.client-hero-title{
+    font-size:42px;
+    line-height:1.2;
+    font-weight:700;
+    color:#0f172a;
+}
+
 .header{
     text-align:center;
     margin-bottom:32px;
@@ -114,6 +167,10 @@ body{
 
 .pill.active .pill-icon{
     filter:brightness(0) invert(1);
+}
+
+.pill.upcoming-pill.active .pill-icon{
+    filter:none;
 }
 
 .card{

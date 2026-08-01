@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+
+<header class="top-header-bar" role="navigation" aria-label="Primary menu">
+    <div class="top-header-inner">
+        <div class="top-header-left">
+            <img class="top-brand-logo" src="icon/HueSixteen.png" alt="HueSixteen logo">
+            <span class="top-brand-name">HueSixteen</span>
+        </div>
+        <nav class="top-header-middle" aria-label="Primary menu links">
+            <a class="top-menu-link" href="index.html">Content Calendar</a>
+            <a class="top-menu-link active" href="client.html" aria-current="page">Clients</a>
+        </nav>
+        <div class="top-header-right">
+            <div class="notification-center" id="notificationCenter">
+                <button class="notification-btn" id="notificationBtn" title="Upcoming in 24 hours" onclick="toggleNotificationPanel(event)">
+                    <svg class="icon-svg icon-bell" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14.5 17H5.5a.5.5 0 0 1-.42-.78L6.5 14V10a5.5 5.5 0 0 1 11 0v4l1.42 2.22a.5.5 0 0 1-.42.78h-4" />
+                        <path d="M10 19a2 2 0 0 0 4 0" />
+                    </svg>
+                    <span class="notification-count" id="notificationCount">0</span>
+                </button>
+                <div class="notification-panel" id="notificationPanel">
+                    <div class="notification-panel-header">
+                        <h3>Upcoming 24 Hours</h3>
+                        <span class="notification-total" id="notificationTotal">0</span>
+                    </div>
+                    <div class="notification-list" id="notificationList"></div>
+                </div>
+            </div>
+            <div class="profile-menu" id="profileMenu">
+                <button class="profile-btn" id="profileBtn" type="button" title="Profile options" onclick="toggleProfileMenu(event)">
+                    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5" />
+                        <path d="M5 20a7 7 0 0 1 14 0" />
+                    </svg>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <button class="profile-dropdown-item" type="button" onclick="closeProfileMenu(); refreshPage();">Refresh</button>
+                    <button class="profile-dropdown-item danger" type="button" onclick="closeProfileMenu(); logout();">Logout</button>
+                </div>
+            </div>
+            <div class="header-menu-wrap">
+                <button class="header-menu-btn" id="headerMenuBtn" type="button" aria-label="Open menu" onclick="toggleHeaderDrawer(event)">
+                    <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 17h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay" onclick="handleMobileDrawerOverlay(event)">
+    <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile menu">
+        <div class="mobile-drawer-head">
+            <span class="mobile-drawer-title">Menu</span>
+            <button class="mobile-drawer-close" type="button" aria-label="Close menu" onclick="closeHeaderDrawer()">×</button>
+        </div>
+        <nav class="mobile-drawer-nav" aria-label="Mobile primary menu">
+            <a class="mobile-drawer-link" href="index.html" onclick="closeHeaderDrawer()">Content Calendar</a>
+            <a class="mobile-drawer-link active" href="client.html" aria-current="page" onclick="closeHeaderDrawer()">Clients</a>
+        </nav>
+    </aside>
+</div>
+
+<section class="client-hero">
+    <h1 class="client-hero-title">Client Dashboard</h1>
+</section>
+
+<section class="client-toolbar" aria-label="Client filters and actions">
+    <div class="client-filter-group">
+        <select class="client-filter-select" id="clientFilterSelect" aria-label="Client filter"></select>
+    </div>
+    <button class="client-add-btn" id="clientAddBtn" type="button">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+        </svg>
+        <span>Add New</span>
+    </button>
+</section>
+
+<section class="client-grid-section" aria-label="Client cards">
+    <div class="client-grid" id="clientGrid"></div>
+</section>
+
+<div class="client-panel-overlay" id="clientPanelOverlay" aria-hidden="true">
+    <aside class="client-detail-panel" role="dialog" aria-modal="true" aria-labelledby="clientPanelTitle">
+        <div class="client-panel-head">
+            <h2 id="clientPanelTitle">Client Details</h2>
+            <button class="client-panel-close" id="clientPanelClose" type="button" aria-label="Close panel">×</button>
+        </div>
+
+        <section class="client-panel-section client-panel-section-identity" aria-label="Client identity">
+            <div class="client-detail-block status-chip-block">
+                <div class="client-detail-status-row">
+                    <div class="status-dropdown" id="detailClientStatusDropdown">
+                        <button class="status-dropdown-trigger status-chip status-chip-research" id="detailClientStatusTrigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="detailClientStatusText">Research</span>
+                            <span class="status-dropdown-arrow">▾</span>
+                        </button>
+                        <div class="status-dropdown-menu" id="detailClientStatusMenu" role="listbox" aria-label="Client status options">
+                            <button class="status-dropdown-option status-chip-research" type="button" data-status-value="Research">Research</button>
+                            <button class="status-dropdown-option status-chip-observation" type="button" data-status-value="Observation">Observation</button>
+                            <button class="status-dropdown-option status-chip-1st-msg" type="button" data-status-value="1st Msg">1st Msg</button>
+                            <button class="status-dropdown-option status-chip-2nd-msg" type="button" data-status-value="2nd Msg">2nd Msg</button>
+                            <button class="status-dropdown-option status-chip-3rd-msg" type="button" data-status-value="3rd Msg">3rd Msg</button>
+                            <button class="status-dropdown-option status-chip-replied" type="button" data-status-value="Replied">Replied</button>
+                            <button class="status-dropdown-option status-chip-got-project" type="button" data-status-value="Got Project">Got Project</button>
+                        </div>
+                        <input id="detailClientStatus" type="hidden" value="Research">
+                    </div>
+                    <div class="detail-social-dropdown" id="detailClientSocialDropdown">
+                        <button class="detail-social-trigger" id="detailClientSocialTrigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="detail-social-trigger-main" id="detailClientSocialTriggerMain"></span>
+                            <span class="detail-social-trigger-arrow">▾</span>
+                        </button>
+                        <div class="detail-social-menu" id="detailClientSocialMenu" role="listbox" aria-label="Client social options"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Client name</p>
+                <input class="client-detail-input" id="detailClientName" type="text" value="-">
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Client designation</p>
+                <input class="client-detail-input" id="detailClientDesignation" type="text" value="-">
+            </div>
+        </section>
+
+        <section class="client-panel-section client-panel-section-business" aria-label="Business details">
+            <div class="client-detail-block">
+                <p class="client-detail-label">Business name</p>
+                <input class="client-detail-input" id="detailBusinessName" type="text" value="-">
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Business type</p>
+                <input class="client-detail-input" id="detailBusinessType" type="text" value="-">
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Service / products</p>
+                <input class="client-detail-input" id="detailServiceProducts" type="text" value="-">
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Description</p>
+                <textarea class="client-detail-textarea" id="detailClientDescription" rows="4">-</textarea>
+            </div>
+        </section>
+
+        <section class="client-panel-section client-panel-section-social" aria-label="Social links">
+            <div class="client-detail-block">
+                <div class="client-social-block-head">
+                    <p class="client-detail-label">Social links</p>
+                    <button class="client-social-add-btn" id="addSocialLinkBtn" type="button">Add New Link</button>
+                </div>
+                <div class="client-social-list" id="clientSocialList"></div>
+            </div>
+        </section>
+
+        <div class="client-panel-actions">
+            <button class="client-panel-cancel" id="clientPanelCancelBtn" type="button">Cancel</button>
+            <button class="client-panel-save" id="clientPanelSaveBtn" type="button">Save Changes</button>
+        </div>
+    </aside>
+</div>
+
+<div class="client-modal-overlay" id="socialLinkOverlay" aria-hidden="true">
+    <div class="client-modal" role="dialog" aria-modal="true" aria-labelledby="socialLinkTitle">
+        <h3 id="socialLinkTitle">Social Link</h3>
+        <label class="client-modal-label">Platform</label>
+        <div class="social-platform-picker">
+            <button class="social-platform-trigger" id="socialPlatformTrigger" type="button" aria-expanded="false">
+                <span class="social-platform-trigger-main" id="socialPlatformTriggerMain"></span>
+                <span class="social-platform-trigger-arrow" id="socialPlatformTriggerArrow">▾</span>
+            </button>
+            <div class="social-platform-dropdown" id="socialPlatformDropdown" aria-hidden="true"></div>
+        </div>
+        <label class="client-modal-label" for="socialLinkInput">Profile link</label>
+        <input class="client-modal-input" id="socialLinkInput" type="url" placeholder="https://...">
+        <label class="client-modal-label">Social level (1-3)</label>
+        <div class="social-level-group" id="socialLevelGroup">
+            <button class="social-level-btn active" type="button" data-level="1">1</button>
+            <button class="social-level-btn" type="button" data-level="2">2</button>
+            <button class="social-level-btn" type="button" data-level="3">3</button>
+        </div>
+        <div class="client-modal-actions">
+            <button class="client-primary-btn" id="socialLinkSaveBtn" type="button">Add</button>
+            <button class="client-secondary-btn" id="socialLinkCancelBtn" type="button">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="client-modal-overlay" id="clientFormOverlay" aria-hidden="true">
+    <div class="client-modal" role="dialog" aria-modal="true" aria-labelledby="clientFormTitle">
+        <h3 id="clientFormTitle">Add Client</h3>
+        <label class="client-modal-label" for="formBusinessName">Business name</label>
+        <input class="client-modal-input" id="formBusinessName" type="text" placeholder="Business name">
+        <label class="client-modal-label" for="formBusinessType">Business type</label>
+        <input class="client-modal-input" id="formBusinessType" type="text" placeholder="Business type">
+        <label class="client-modal-label" for="formServiceProducts">Service / products</label>
+        <input class="client-modal-input" id="formServiceProducts" type="text" placeholder="Service or products">
+        <div class="client-modal-actions">
+            <button class="client-primary-btn" id="clientFormSaveBtn" type="button">Add</button>
+            <button class="client-secondary-btn" id="clientFormCancelBtn" type="button">Cancel</button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script src="script.js"></script>
+<script src="client.js"></script>
+
+</body>
+</html>

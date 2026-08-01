@@ -46,7 +46,7 @@ events:{
 
 huefb:{
 title:"HueSixteen",
-icon:"icon/HueSixteen.png",
+icon:"icon/facebook.png",
 info:"Posting Days: Tuesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Engaging visual content and educational resources.",
 events:{
@@ -70,7 +70,7 @@ events:{
 
 fafb:{
 title:"Faysal",
-icon:"icon/Faysal.png",
+icon:"icon/facebook.png",
 info:"Posting Days: Monday • Wednesday • Friday • Sunday<br>Posting Time: 8:00 PM",
 notes:"Personal brand content and design insights.",
 events:{
@@ -171,6 +171,27 @@ appendRecurringEvents("fafb", "2026-08-01", "2026-09-30", [
     { text: "Personal Story / Lesson", class: "logo" }
 ], [0, 1, 3, 5]);
 
+platforms.linkedin.title = "Faysal";
+
+function createHueSixteenMirrorPlatform(key, iconPath) {
+    const source = platforms.huefb;
+    if (!source) {
+        return;
+    }
+
+    platforms[key] = {
+        title: "Hue Sixteen",
+        icon: iconPath,
+        info: source.info,
+        notes: source.notes,
+        events: { ...source.events }
+    };
+}
+
+createHueSixteenMirrorPlatform("hueig", "icon/instagram.png");
+createHueSixteenMirrorPlatform("hueli", "icon/Linkedin.png");
+createHueSixteenMirrorPlatform("hueth", "icon/threads.webp");
+
 // Unique color mapping for each topic
 const topicColors = {
     "Full Brand Identity": "color-1",
@@ -195,6 +216,7 @@ let allEvents = {};
 let currentModalDate = "";
 let currentModalPlatform = "";
 let activeTabBeforeModal = ""; // Track which tab was active before opening modal
+let modalReturnTab = ""; // Remember where to return after saving modal changes
 let postStatuses = {}; // Store status from MongoDB: { "platform_date": {_id, status} }
 const isLocalAppMode = window.location.protocol === "file:";
 const LOCAL_POST_STATUSES_KEY = "huesixteen_post_statuses";
@@ -470,10 +492,49 @@ function refreshNotificationCenter() {
     renderNotificationCenter();
 }
 
+function toggleHeaderDrawer(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    const overlay = document.getElementById("mobileDrawerOverlay");
+    if (!overlay) {
+        return;
+    }
+
+    const willOpen = !overlay.classList.contains("active");
+    overlay.classList.toggle("active", willOpen);
+    document.body.classList.toggle("drawer-open", willOpen);
+
+    if (willOpen) {
+        closeNotificationPanel();
+        closeProfileMenu();
+    }
+}
+
+function closeHeaderDrawer() {
+    const overlay = document.getElementById("mobileDrawerOverlay");
+    if (!overlay) {
+        return;
+    }
+
+    overlay.classList.remove("active");
+    document.body.classList.remove("drawer-open");
+}
+
+function handleMobileDrawerOverlay(event) {
+    if (event && event.target && event.target.id === "mobileDrawerOverlay") {
+        closeHeaderDrawer();
+    }
+}
+
 function toggleNotificationPanel(event) {
     if (event) {
         event.stopPropagation();
     }
+
+    closeProfileMenu();
+    closeHeaderDrawer();
 
     const panel = document.getElementById("notificationPanel");
     const button = document.getElementById("notificationBtn");
@@ -494,6 +555,40 @@ function closeNotificationPanel() {
     }
 
     panel.classList.remove("active");
+    button.classList.remove("active");
+}
+
+function toggleProfileMenu(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    closeNotificationPanel();
+    closeHeaderDrawer();
+
+    const menu = document.getElementById("profileMenu");
+    const dropdown = document.getElementById("profileDropdown");
+    const button = document.getElementById("profileBtn");
+    if (!menu || !dropdown || !button) {
+        return;
+    }
+
+    const willOpen = !dropdown.classList.contains("active");
+    menu.classList.toggle("active", willOpen);
+    dropdown.classList.toggle("active", willOpen);
+    button.classList.toggle("active", willOpen);
+}
+
+function closeProfileMenu() {
+    const menu = document.getElementById("profileMenu");
+    const dropdown = document.getElementById("profileDropdown");
+    const button = document.getElementById("profileBtn");
+    if (!menu || !dropdown || !button) {
+        return;
+    }
+
+    menu.classList.remove("active");
+    dropdown.classList.remove("active");
     button.classList.remove("active");
 }
 
@@ -784,9 +879,12 @@ async function refreshCurrentView() {
     await fetchPostStatuses();
     syncAndroidSchedules();
 
-    if (activeTabBeforeModal === "upcoming") {
+    const returnTab = modalReturnTab || activeTabBeforeModal || currentPlatform || "upcoming";
+    modalReturnTab = "";
+    activeTabBeforeModal = "";
+
+    if (returnTab === "upcoming") {
         loadPlatform("upcoming");
-        activeTabBeforeModal = "";
         return;
     }
 
@@ -853,8 +951,10 @@ function openUpcomingModal(dateKey, platformKey, topicOverride = null, timeOverr
     
     if(!platformName) return;
     
-    // Save the active tab before changing platform
-    activeTabBeforeModal = currentPlatform;
+    // Save visible tab before changing platform so refresh returns correctly
+    const isUpcomingView = document.getElementById("upcomingSection")?.classList.contains("active");
+    activeTabBeforeModal = isUpcomingView ? "upcoming" : currentPlatform;
+    modalReturnTab = activeTabBeforeModal || "upcoming";
     
     // Set current platform
     currentPlatform = platformName;
@@ -874,6 +974,11 @@ function openUpcomingModal(dateKey, platformKey, topicOverride = null, timeOverr
 function openModal(day, month, topicOverride = null, timeOverride = ""){
     const modal = document.getElementById("modal");
     const platform = platforms[currentPlatform];
+
+    if (!modalReturnTab) {
+        const isUpcomingView = document.getElementById("upcomingSection")?.classList.contains("active");
+        modalReturnTab = isUpcomingView ? "upcoming" : (currentPlatform || "upcoming");
+    }
 
     modalTopicOverride = topicOverride;
     modalTimeOverride = timeOverride;
@@ -952,7 +1057,7 @@ async function saveTopicName(){
         // Update the platform events object for local UI display
         const platform = platforms[currentModalPlatform];
         if(platform && platform.events[currentModalDate]){
-            const oldTopic = platform.events[currentModalDate].text;
+            const returnTab = modalReturnTab || activeTabBeforeModal || currentPlatform || "upcoming";
             
             // Get the current color to preserve it
             const currentColor = getColor(currentModalPlatform, currentModalDate);
@@ -961,9 +1066,15 @@ async function saveTopicName(){
             // Save to database via API
             await savePostStatus(currentModalPlatform, currentModalDate, newTopicName, getStatus(currentModalPlatform, currentModalDate), currentColor, currentNote);
             await refreshCurrentView();
-            
-            // Close the modal to refresh with updated data
-            closeModal();
+
+            // Keep modal open and show the updated topic name immediately.
+            modalTopicOverride = newTopicName;
+            document.getElementById("topicDisplay").innerHTML = `<div class="modal-post-item">${newTopicName}</div>`;
+            cancelEditTopic();
+
+            // Preserve modal return context for later close/status save actions.
+            modalReturnTab = returnTab;
+            activeTabBeforeModal = returnTab;
         }
     }
 }
@@ -1074,6 +1185,8 @@ async function applySelectedColor(){
     if(currentModalDate && currentModalPlatform){
         const platform = platforms[currentModalPlatform];
         if(platform && platform.events[currentModalDate]){
+            const returnTab = modalReturnTab || activeTabBeforeModal || currentPlatform || "upcoming";
+
             // Get the current topic from database
             const currentTopic = getTopic(currentModalPlatform, currentModalDate) || platform.events[currentModalDate].text;
             const currentStatus = getStatus(currentModalPlatform, currentModalDate);
@@ -1082,10 +1195,11 @@ async function applySelectedColor(){
             // Save color through API
             await savePostStatus(currentModalPlatform, currentModalDate, currentTopic, currentStatus, hexColor, currentNote);
             await refreshCurrentView();
-            
-            // Close both modals to refresh with updated data
+
+            // Return to details modal after color apply.
+            modalReturnTab = returnTab;
+            activeTabBeforeModal = returnTab;
             closeColorPickerModal();
-            closeModal();
         }
     }
 }
@@ -1216,6 +1330,14 @@ function handleGradientClick(e){
 function closeModal(){
     modalTopicOverride = null;
     modalTimeOverride = "";
+
+    // If closed from Upcoming without save, restore tab context for next edit.
+    if (modalReturnTab === "upcoming") {
+        currentPlatform = "upcoming";
+    }
+
+    modalReturnTab = "";
+    activeTabBeforeModal = "";
     document.getElementById("modal").classList.remove("active");
 }
 
@@ -1316,13 +1438,15 @@ function collectUpcomingEvents(){
         
         Object.keys(events).forEach(dateKey => {
             const scheduleDate = buildDateTime(dateKey, timeInfo.hour, timeInfo.minute);
-            if (scheduleDate <= now) {
+            const status = getStatus(platformName, dateKey);
+            const isWorking = status === "working";
+
+            // Always keep working cards in Upcoming, even if date passed.
+            if (!isWorking && scheduleDate <= now) {
                 return;
             }
 
-            const status = getStatus(platformName, dateKey);
-            // Show if: within next 7 days OR status is "working"
-            if(next7Days.includes(dateKey) || status === "working"){
+            if(next7Days.includes(dateKey) || isWorking){
                 if(!eventsByDate[dateKey]){
                     eventsByDate[dateKey] = [];
                 }
@@ -1609,12 +1733,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.addEventListener("click", function(event) {
         const center = document.getElementById("notificationCenter");
-        if (!center) {
-            return;
+        if (center && !center.contains(event.target)) {
+            closeNotificationPanel();
         }
 
-        if (!center.contains(event.target)) {
-            closeNotificationPanel();
+        const profileMenu = document.getElementById("profileMenu");
+        if (profileMenu && !profileMenu.contains(event.target)) {
+            closeProfileMenu();
+        }
+
+        const drawerOverlay = document.getElementById("mobileDrawerOverlay");
+        const drawer = document.getElementById("mobileDrawer");
+        const drawerBtn = document.getElementById("headerMenuBtn");
+        if (
+            drawerOverlay
+            && drawerOverlay.classList.contains("active")
+            && drawer
+            && !drawer.contains(event.target)
+            && drawerBtn
+            && !drawerBtn.contains(event.target)
+        ) {
+            closeHeaderDrawer();
         }
     });
 
@@ -1754,11 +1893,15 @@ async function initializeApp() {
     // Check authentication first
     const isAuthenticated = await checkAuthentication();
     if (!isAuthenticated) return;
+
+    const isCalendarPage = Boolean(document.getElementById("platformCard"));
     
     console.log('Initializing Content Calendar...');
     await fetchPostStatuses();
     syncAndroidSchedules();
-    loadPlatform("upcoming");
+    if (isCalendarPage) {
+        loadPlatform("upcoming");
+    }
     refreshNotificationCenter();
     setInterval(refreshNotificationCenter, 60 * 1000);
     console.log('✓ App initialized');
@@ -1770,21 +1913,4 @@ initializeApp();
 // ==================== Refresh Page Function ====================
 function refreshPage() {
     location.reload();
-}
-
-function updateApp() {
-    const cacheBust = Date.now();
-
-    if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.forceUpdate === "function") {
-        try {
-            AndroidBridge.forceUpdate();
-            return;
-        } catch (error) {
-            console.error("Android force update failed:", error);
-        }
-    }
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("v", String(cacheBust));
-    window.location.replace(url.toString());
 }
