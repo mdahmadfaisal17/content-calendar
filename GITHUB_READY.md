@@ -51,9 +51,9 @@ Your project is 100% SAFE for GitHub deployment!
 
 ```env
 MONGODB_URI=mongodb+srv://mdahmadfaisal17_db_user:...  ← PROTECTED
-LOGIN_EMAIL=mdahmadfaisal17@gmail.com                   ← PROTECTED
-LOGIN_PASSWORD=CC_Atlas_2026_Admin                      ← PROTECTED
-SESSION_SECRET=content_calendar_secure_session_2026... ← PROTECTED
+LOGIN_EMAIL=YOUR_LOGIN_EMAIL                             ← PROTECTED
+LOGIN_PASSWORD=YOUR_LOGIN_PASSWORD                        ← PROTECTED
+SESSION_SECRET=YOUR_SESSION_SECRET                       ← PROTECTED
 ```
 
 ---

@@ -15,28 +15,25 @@ import androidx.core.content.ContextCompat
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        try {
+            AlarmService.start(context, intent)
+        } catch (_: Exception) {
+            AlarmNotification.show(
+                context,
+                intent.getStringExtra(EXTRA_TITLE) ?: "HueSixteen",
+                buildMessage(intent),
+                intent.getStringExtra(EXTRA_RULE_ID) ?: "unknown",
+            )
+        }
+
+        AlarmScheduler.markDelivered(context, intent.getStringExtra(EXTRA_RULE_ID) ?: "unknown")
+    }
+
+    private fun buildMessage(intent: Intent): String {
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "HueSixteen"
-        val ruleId = intent.getStringExtra(EXTRA_RULE_ID) ?: "unknown"
         val topic = intent.getStringExtra(EXTRA_TOPIC) ?: "Scheduled content"
         val timeLabel = intent.getStringExtra(EXTRA_TIME_LABEL) ?: ""
-        val message = if (timeLabel.isBlank()) "$title: $topic" else "$title: $topic at $timeLabel"
-
-        val launchIntent = Intent(context, AlarmActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra(EXTRA_TITLE, title)
-            putExtra(EXTRA_RULE_ID, ruleId)
-            putExtra(EXTRA_TOPIC, topic)
-            putExtra(EXTRA_TIME_LABEL, timeLabel)
-        }
-
-        try {
-            context.startActivity(launchIntent)
-        } catch (_: Exception) {
-            // Alarm must continue via notification path even if activity launch is blocked.
-        }
-
-        AlarmNotification.show(context, title, message, ruleId)
-        AlarmScheduler.markDelivered(context, ruleId)
+        return if (timeLabel.isBlank()) "$title: $topic" else "$title: $topic at $timeLabel"
     }
 
     companion object {

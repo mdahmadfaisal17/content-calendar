@@ -5,9 +5,12 @@ import android.app.AlarmManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
+import androidx.appcompat.app.AlertDialog
 import android.webkit.WebSettings
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -18,6 +21,10 @@ import java.net.URL
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
+    private val uiPrefs: SharedPreferences by lazy {
+        getSharedPreferences("huesixteen_ui_prefs", MODE_PRIVATE)
+    }
 
     private val devFallbackCandidates = listOf(
         "http://192.168.0.104:5000",
@@ -38,7 +45,9 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermissionIfNeeded()
         requestExactAlarmPermissionIfNeeded()
+        requestBatteryOptimizationExemptionIfNeeded()
         AlarmScheduler.scheduleAll(this)
+        showAlarmHelpOnce()
 
         val webView = findViewById<WebView>(R.id.webView)
         webView.settings.apply {
@@ -56,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         requestExactAlarmPermissionIfNeeded()
+        requestBatteryOptimizationExemptionIfNeeded()
         AlarmScheduler.scheduleAll(this)
     }
 
@@ -74,6 +84,42 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
             }
         }
+    }
+
+    private fun requestBatteryOptimizationExemptionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return
+        }
+
+        val powerManager = getSystemService(PowerManager::class.java)
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            return
+        }
+
+        startActivity(
+            Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            },
+        )
+    }
+
+    private fun showAlarmHelpOnce() {
+        if (uiPrefs.getBoolean("alarm_help_seen", false)) {
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.alarm_help_title)
+            .setMessage(R.string.alarm_help_message)
+            .setPositiveButton(R.string.alarm_help_open_settings) { _, _ ->
+                requestExactAlarmPermissionIfNeeded()
+                requestBatteryOptimizationExemptionIfNeeded()
+            }
+            .setNegativeButton(R.string.alarm_help_got_it, null)
+            .setOnDismissListener {
+                uiPrefs.edit().putBoolean("alarm_help_seen", true).apply()
+            }
+            .show()
     }
 
     private class AlarmBridge(private val activity: MainActivity) {
@@ -108,6 +154,39 @@ class MainActivity : AppCompatActivity() {
                     webView.loadUrl("$refreshed?v=${System.currentTimeMillis()}")
                 } else {
                     activity.loadBestAppUrl(webView)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun openNotificationSettings() {
+            activity.runOnUiThread {
+                activity.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
+                    },
+                )
+            }
+        }
+
+        @JavascriptInterface
+        fun openExactAlarmSettings() {
+            activity.runOnUiThread {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    activity.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun openBatterySettings() {
+            activity.runOnUiThread {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    activity.startActivity(
+                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:${activity.packageName}")
+                        },
+                    )
                 }
             }
         }

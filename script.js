@@ -98,6 +98,78 @@ events:{
 
 };
 
+const MONTH_CONFIG = {
+    june: { code: "06", days: 30, startOffset: 1 },
+    july: { code: "07", days: 31, startOffset: 3 },
+    august: { code: "08", days: 31, startOffset: 6 },
+    september: { code: "09", days: 30, startOffset: 2 }
+};
+
+function getMonthCode(month) {
+    return MONTH_CONFIG[month]?.code || "07";
+}
+
+function getMonthNameFromCode(monthCode) {
+    const monthEntry = Object.entries(MONTH_CONFIG).find(([, config]) => config.code === monthCode);
+    return monthEntry ? monthEntry[0] : "july";
+}
+
+function appendRecurringEvents(platformKey, startDate, endDate, pattern, weekdays) {
+    const platform = platforms[platformKey];
+    if (!platform || !platform.events) {
+        return;
+    }
+
+    const weekdaySet = new Set(weekdays);
+    const currentDate = new Date(`${startDate}T00:00:00`);
+    const lastDate = new Date(`${endDate}T00:00:00`);
+    let patternIndex = 0;
+
+    while (currentDate <= lastDate) {
+        if (weekdaySet.has(currentDate.getDay())) {
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+            const day = String(currentDate.getDate()).padStart(2, "0");
+            const dateKey = `${year}-${month}-${day}`;
+            const item = pattern[patternIndex % pattern.length];
+
+            platform.events[dateKey] = {
+                text: item.text,
+                class: item.class
+            };
+            patternIndex += 1;
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+}
+
+appendRecurringEvents("dribbble", "2026-08-01", "2026-09-30", [
+    { text: "Print Materials", class: "print" },
+    { text: "Digital Assets", class: "digital" },
+    { text: "Full Brand Identity", class: "brand" },
+    { text: "Logo Presentation", class: "logo" }
+], [1, 4]);
+
+appendRecurringEvents("linkedin", "2026-08-01", "2026-09-30", [
+    { text: "Project Showcase", class: "showcase" },
+    { text: "Branding Insight", class: "insight" },
+    { text: "Behind The Work", class: "bts" }
+], [2, 4, 6]);
+
+appendRecurringEvents("huefb", "2026-08-01", "2026-09-30", [
+    { text: "Portfolio / Case Study", class: "showcase" },
+    { text: "Branding Insight", class: "insight" },
+    { text: "Educational Content", class: "bts" }
+], [0, 2, 5]);
+
+appendRecurringEvents("fafb", "2026-08-01", "2026-09-30", [
+    { text: "Portfolio Showcase", class: "showcase" },
+    { text: "Branding Opinion", class: "insight" },
+    { text: "Behind The Work", class: "bts" },
+    { text: "Personal Story / Lesson", class: "logo" }
+], [0, 1, 3, 5]);
+
 // Unique color mapping for each topic
 const topicColors = {
     "Full Brand Identity": "color-1",
@@ -175,7 +247,7 @@ function openUpcomingModal(dateKey, platformKey) {
     const day = parseInt(dateParts[2]);
     
     // Determine month name
-    const month = monthNum === "06" ? "june" : "july";
+    const month = getMonthNameFromCode(monthNum);
     
     // Open the modal
     openModal(day, month);
@@ -190,7 +262,7 @@ function openModal(day, month){
     
     let topicDisplay = "";
     const events = platform.events;
-    const monthNum = month === "june" ? "06" : "07";
+    const monthNum = getMonthCode(month);
     const fullDate = `2026-${monthNum}-${String(day).padStart(2, '0')}`;
     
     currentModalDate = fullDate;
@@ -584,7 +656,7 @@ function buildCalendar(containerId, monthDays, startOffset, events, month){
         let className = "";
         let content = "";
 
-        const monthNum = month === "june" ? "06" : "07";
+        const monthNum = getMonthCode(month);
         const fullDate = `2026-${monthNum}-${String(day).padStart(2, '0')}`;
         
         if(events[fullDate]){
@@ -764,12 +836,16 @@ function renderUpcomingEvents(){
 function hideCalendars(){
     document.getElementById("juneCalendar").parentElement.style.display = "none";
     document.getElementById("julyCalendar").parentElement.style.display = "none";
+    document.getElementById("augustCalendar").parentElement.style.display = "none";
+    document.getElementById("septemberCalendar").parentElement.style.display = "none";
     document.getElementById("notes").parentElement.style.display = "none";
 }
 
 function showCalendars(){
     document.getElementById("juneCalendar").parentElement.style.display = "block";
     document.getElementById("julyCalendar").parentElement.style.display = "block";
+    document.getElementById("augustCalendar").parentElement.style.display = "block";
+    document.getElementById("septemberCalendar").parentElement.style.display = "block";
     document.getElementById("notes").parentElement.style.display = "block";
 }
 
@@ -848,18 +924,34 @@ function loadPlatform(name){
 
     buildCalendar(
         "juneCalendar",
-        30,
-        1,
+        MONTH_CONFIG.june.days,
+        MONTH_CONFIG.june.startOffset,
         data.events,
         "june"
     );
 
     buildCalendar(
         "julyCalendar",
-        31,
-        3,
+        MONTH_CONFIG.july.days,
+        MONTH_CONFIG.july.startOffset,
         data.events,
         "july"
+    );
+
+    buildCalendar(
+        "augustCalendar",
+        MONTH_CONFIG.august.days,
+        MONTH_CONFIG.august.startOffset,
+        data.events,
+        "august"
+    );
+
+    buildCalendar(
+        "septemberCalendar",
+        MONTH_CONFIG.september.days,
+        MONTH_CONFIG.september.startOffset,
+        data.events,
+        "september"
     );
 
 }

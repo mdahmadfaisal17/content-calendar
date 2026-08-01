@@ -292,11 +292,11 @@ DB_NAME=content_calendar
 COLLECTION_NAME=posts
 
 # NEW - Login Credentials
-LOGIN_EMAIL=mdahmadfaisal17@gmail.com
-LOGIN_PASSWORD=CC_Atlas_2026_Admin
+LOGIN_EMAIL=YOUR_LOGIN_EMAIL
+LOGIN_PASSWORD=YOUR_LOGIN_PASSWORD
 
 # NEW - Session Secret
-SESSION_SECRET=content_calendar_secure_session_2026_xyz789
+SESSION_SECRET=YOUR_SESSION_SECRET
 ```
 
 ---
@@ -338,9 +338,9 @@ SESSION_SECRET=your-secret-session-key-here
 
 | Variable | Value |
 |----------|-------|
-| `LOGIN_EMAIL` | `mdahmadfaisal17@gmail.com` |
-| `LOGIN_PASSWORD` | `CC_Atlas_2026_Admin` |
-| `SESSION_SECRET` | `content_calendar_secure_session_2026_xyz789` |
+| `LOGIN_EMAIL` | `YOUR_LOGIN_EMAIL` |
+| `LOGIN_PASSWORD` | `YOUR_LOGIN_PASSWORD` |
+| `SESSION_SECRET` | `YOUR_SESSION_SECRET` |
 
 ### Protection
 - ✅ Stored in `.env` (git-ignored)
@@ -367,8 +367,8 @@ npm run dev
 Navigate to: `http://localhost:5000`
 
 Enter credentials:
-- **Email**: `mdahmadfaisal17@gmail.com`
-- **Password**: `CC_Atlas_2026_Admin`
+- **Email**: `YOUR_LOGIN_EMAIL`
+- **Password**: `YOUR_LOGIN_PASSWORD`
 
 ### 4. Access Calendar
 After login, you'll see the Content Calendar dashboard

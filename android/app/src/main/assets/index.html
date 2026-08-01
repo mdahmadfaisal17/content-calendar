@@ -14,12 +14,15 @@
 <div class="header">
     <div class="header-content">
         <h1>Content Calendar</h1>
-        <p>June 2026 - July 2026</p>
+        <p>June 2026 - September 2026</p>
     </div>
     <div class="header-actions">
         <div class="notification-center" id="notificationCenter">
             <button class="notification-btn" id="notificationBtn" title="Upcoming in 24 hours" onclick="toggleNotificationPanel(event)">
-                <span class="notification-icon">🔔</span>
+                <svg class="icon-svg icon-bell" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14.5 17H5.5a.5.5 0 0 1-.42-.78L6.5 14V10a5.5 5.5 0 0 1 11 0v4l1.42 2.22a.5.5 0 0 1-.42.78h-4" />
+                    <path d="M10 19a2 2 0 0 0 4 0" />
+                </svg>
                 <span class="notification-count" id="notificationCount">0</span>
             </button>
             <div class="notification-panel" id="notificationPanel">
@@ -31,7 +34,12 @@
             </div>
         </div>
         <button class="update-btn" onclick="updateApp()" title="Load latest update">Update</button>
-        <button class="refresh-btn" onclick="refreshPage()" title="Refresh">🔄</button>
+        <button class="refresh-btn" onclick="refreshPage()" title="Refresh">
+            <svg class="icon-svg icon-refresh" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+                <path d="M20 4v6h-6" />
+            </svg>
+        </button>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 </div>
@@ -72,6 +80,16 @@
 <div class="card">
     <h3 class="month-title">July 2026</h3>
     <div class="calendar" id="julyCalendar"></div>
+</div>
+
+<div class="card">
+    <h3 class="month-title">August 2026</h3>
+    <div class="calendar" id="augustCalendar"></div>
+</div>
+
+<div class="card">
+    <h3 class="month-title">September 2026</h3>
+    <div class="calendar" id="septemberCalendar"></div>
 </div>
 
 <div class="card">

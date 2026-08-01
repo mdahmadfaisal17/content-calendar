@@ -242,9 +242,9 @@ Status: Protected from version control
 
 Contains (NEVER exposed):
 - MONGODB_URI=mongodb+srv://mdahmadfaisal17_db_user:...
-- LOGIN_EMAIL=mdahmadfaisal17@gmail.com
-- LOGIN_PASSWORD=CC_Atlas_2026_Admin
-- SESSION_SECRET=content_calendar_secure_session_2026_xyz789
+- LOGIN_EMAIL=YOUR_LOGIN_EMAIL
+- LOGIN_PASSWORD=YOUR_LOGIN_PASSWORD
+- SESSION_SECRET=YOUR_SESSION_SECRET
 ```
 
 ### `node_modules/` Directory

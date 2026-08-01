@@ -2,4 +2,8 @@
 <resources>
     <string name="app_name">HueSixteen</string>
     <string name="remote_backend_url">https://calendar.huesixteen.com</string>
+    <string name="alarm_help_title">Keep alarms reliable</string>
+    <string name="alarm_help_message">For alarms to ring on time when the screen is locked, allow notifications, exact alarms, and battery optimization exemption. Some phones block background alerts unless these are allowed.</string>
+    <string name="alarm_help_open_settings">Open settings again</string>
+    <string name="alarm_help_got_it">Got it</string>
 </resources>

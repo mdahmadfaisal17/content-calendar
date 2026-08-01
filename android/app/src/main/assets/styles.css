@@ -37,6 +37,17 @@ body{
     justify-content:flex-end;
 }
 
+.icon-svg{
+    width:20px;
+    height:20px;
+    display:block;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
 .header h1{
     font-size:48px;
     font-weight:700;
@@ -85,6 +96,11 @@ body{
     transform:translateY(-2px);
 }
 
+.refresh-btn .icon-svg{
+    width:18px;
+    height:18px;
+}
+
 .update-btn{
     border:1px solid #16a34a;
     background:#22c55e;
@@ -121,6 +137,11 @@ body{
     justify-content:center;
 }
 
+.notification-btn .icon-svg{
+    width:20px;
+    height:20px;
+}
+
 .notification-btn:hover,
 .notification-btn.active{
     transform:translateY(-2px);
@@ -131,6 +152,21 @@ body{
 .notification-icon{
     font-size:19px;
     line-height:1;
+}
+
+.header-action-btn{
+    width:44px;
+    height:44px;
+}
+
+.header-action-btn.settings-btn{
+    width:52px;
+    height:52px;
+}
+
+.header-action-btn.settings-btn .icon-svg{
+    width:26px;
+    height:26px;
 }
 
 .notification-count{

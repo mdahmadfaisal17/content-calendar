@@ -28,7 +28,7 @@ All credentials and secrets are stored in the `.env` file (NOT in code).
 **Current Configuration**:
 ```env
 # MongoDB Configuration
-MONGODB_URI=mongodb+srv://mdahmadfaisal17_db_user:Mockshdggdgark2026Atlas!89@mockshark-cluster.8yg1dbs.mongodb.net/?appName=mockshark-cluster
+MONGODB_URI=mongodb+srv://YOUR_DB_USER:YOUR_DB_PASSWORD@YOUR_CLUSTER_URL/?appName=YOUR_CLUSTER_NAME
 
 # Server Configuration
 PORT=5000
@@ -39,11 +39,11 @@ DB_NAME=content_calendar
 COLLECTION_NAME=posts
 
 # Login Credentials
-LOGIN_EMAIL=mdahmadfaisal17@gmail.com
-LOGIN_PASSWORD=CC_Atlas_2026_Admin
+LOGIN_EMAIL=YOUR_LOGIN_EMAIL
+LOGIN_PASSWORD=YOUR_LOGIN_PASSWORD
 
 # Session Secret
-SESSION_SECRET=content_calendar_secure_session_2026_xyz789
+SESSION_SECRET=YOUR_SESSION_SECRET
 ```
 
 **Credentials Stored**: 
@@ -146,9 +146,9 @@ router.get('/posts', isAuthenticated, async (req, res) => { ... });
 
 #### 11. `.env`
 - **Changes**:
-  - Added `LOGIN_EMAIL=mdahmadfaisal17@gmail.com`
-  - Added `LOGIN_PASSWORD=CC_Atlas_2026_Admin`
-  - Added `SESSION_SECRET=content_calendar_secure_session_2026_xyz789`
+   - Added `LOGIN_EMAIL=YOUR_LOGIN_EMAIL`
+   - Added `LOGIN_PASSWORD=YOUR_LOGIN_PASSWORD`
+   - Added `SESSION_SECRET=YOUR_SESSION_SECRET`
 
 #### 12. `.env.example`
 - **Changes**:
@@ -242,8 +242,8 @@ Expected output:
 1. Navigate to: `http://localhost:5000`
 2. You'll be redirected to login page: `http://localhost:5000/login`
 3. Enter credentials:
-   - Email: `mdahmadfaisal17@gmail.com`
-   - Password: `CC_Atlas_2026_Admin`
+   - Email: `YOUR_LOGIN_EMAIL`
+   - Password: `YOUR_LOGIN_PASSWORD`
 4. Click "Sign In"
 5. Access calendar dashboard
 
@@ -272,8 +272,8 @@ Sessions stored in MongoDB collection: `sessions`
   "expires": ISODate("2024-06-23T10:00:00Z"),
   "session": {
     "cookie": {...},
-    "userId": "mdahmadfaisal17@gmail.com",
-    "email": "mdahmadfaisal17@gmail.com"
+   "userId": "YOUR_LOGIN_EMAIL",
+   "email": "YOUR_LOGIN_EMAIL"
   }
 }
 ```
