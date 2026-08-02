@@ -13,6 +13,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Trust reverse proxies (Render/Heroku/Nginx) so secure cookies work over HTTPS.
+if (isProduction) {
+    app.set('trust proxy', 1);
+}
+
 const requiredEnvVars = ['MONGODB_URI', 'SESSION_SECRET', 'LOGIN_EMAIL', 'LOGIN_PASSWORD'];
 const missingEnvVars = requiredEnvVars.filter((name) => !process.env[name]);
 
@@ -23,6 +28,7 @@ if (missingEnvVars.length > 0) {
 // Session middleware (MUST be before routes)
 app.use(session({
     secret: process.env.SESSION_SECRET,
+    proxy: isProduction,
     resave: false,
     saveUninitialized: false,
     store: new MongoStore({
@@ -32,7 +38,7 @@ app.use(session({
         ttl: 24 * 60 * 60 // 24 hours
     }),
     cookie: { 
-        secure: isProduction,
+        secure: isProduction ? 'auto' : false,
         httpOnly: true,
         sameSite: isProduction ? 'strict' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours

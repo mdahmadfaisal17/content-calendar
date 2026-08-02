@@ -22,11 +22,21 @@ router.post('/login', (req, res) => {
         // Set session
         req.session.userId = email;
         req.session.email = email;
-        
-        res.json({ 
-            success: true, 
-            message: 'Login successful',
-            user: email
+
+        // Persist session before responding to avoid redirect race conditions.
+        req.session.save((err) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Could not create session. Please try again.'
+                });
+            }
+
+            res.json({
+                success: true,
+                message: 'Login successful',
+                user: email
+            });
         });
     } else {
         res.status(401).json({ 
