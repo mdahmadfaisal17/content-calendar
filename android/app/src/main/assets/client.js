@@ -18,7 +18,8 @@ const CHANNEL_META = {
     facebook: { title: "Facebook", icon: "icon/facebook.png" },
     instagram: { title: "Instagram", icon: "icon/instagram.png" },
     dribbble: { title: "Dribbble", icon: "icon/dribbble.png" },
-    threads: { title: "Threads", icon: "icon/threads.webp" }
+    threads: { title: "Threads", icon: "icon/threads.webp" },
+    no_reply_yet: { title: "No reply yet", icon: "icon/forbidden.png" }
 };
 
 const SOCIAL_TEMPLATES = [
@@ -29,76 +30,87 @@ const SOCIAL_TEMPLATES = [
 ];
 
 const SOCIAL_PLATFORM_OPTIONS = ["linkedin", "facebook", "instagram", "email", "whatsapp", "dribbble", "threads"];
+const DETAIL_SOCIAL_STATUS_OPTIONS = [...SOCIAL_PLATFORM_OPTIONS, "no_reply_yet"];
 const CLIENTS_STORAGE_KEY = "content_calendar_clients_v1";
 
 let clients = [
     {
-        id: "c1",
-        businessName: "Nova Interiors",
-        businessType: "Interior Design",
-        serviceProducts: "Home interior consultation",
-        clientName: "Nova Interior",
-        clientDesignation: "Owner",
-        clientDescription: "Leading the brand and project coordination.",
-        updatedAt: "2026-07-31",
+        id: "live_seed_1",
+        businessName: "Arc'teryx UK",
+        businessType: "Apparel",
+        serviceProducts: "Technical Outdoor Apparel Waterproof Jackets Hiking Clothing Climbing Gear Trail Running Apparel Footwear Backpacks Outdoor Accessories",
+        clientName: "Arc'teryx UK",
+        clientDesignation: "Company",
+        leadNo: "02",
+        lastMsgFromMySide: "3 August, LinkedIn",
+        clientDescription: "Outdoor apparel brand outreach lead.",
+        updatedAt: "2026-08-03",
+        statusLabel: "1st Msg",
         statuses: {
-            "Research": ["linkedin"],
-            "Observation": ["email"],
-            "1st Msg": ["linkedin", "email"],
-            "2nd Msg": [],
-            "3rd Msg": []
-        },
-        socialProfiles: [
-            { key: "linkedin", name: "LinkedIn", text: "in", link: "", level: 1 },
-            { key: "facebook", name: "Facebook", text: "FB", link: "", level: 2 },
-            { key: "instagram", name: "Instagram", text: "IG", link: "", level: 3 },
-            { key: "email", name: "Email", text: "@", link: "", level: 1 }
-        ]
-    },
-    {
-        id: "c2",
-        businessName: "Atlas Legal",
-        businessType: "Law Firm",
-        serviceProducts: "Corporate legal support",
-        clientName: "Atlas Legal Team",
-        clientDesignation: "Managing Partner",
-        clientDescription: "Handles client communication and case strategy.",
-        updatedAt: "2026-07-22",
-        statuses: {
-            "Research": ["linkedin", "facebook"],
-            "Observation": ["linkedin"],
-            "1st Msg": ["email"],
-            "2nd Msg": ["email"],
-            "3rd Msg": []
-        },
-        socialProfiles: [
-            { key: "linkedin", name: "LinkedIn", text: "in", link: "", level: 1 },
-            { key: "facebook", name: "Facebook", text: "FB", link: "", level: 1 },
-            { key: "instagram", name: "Instagram", text: "IG", link: "", level: 2 },
-            { key: "email", name: "Email", text: "@", link: "", level: 3 }
-        ]
-    },
-    {
-        id: "c3",
-        businessName: "Bloom Dental",
-        businessType: "Healthcare",
-        serviceProducts: "Dental care packages",
-        clientName: "Bloom Dental Admin",
-        clientDesignation: "Practice Manager",
-        clientDescription: "Coordinates appointments, follow-ups, and service flow.",
-        updatedAt: "2026-06-20",
-        statuses: {
-            "Research": ["facebook"],
+            "Research": [],
             "Observation": [],
-            "1st Msg": ["whatsapp"],
-            "2nd Msg": ["whatsapp", "email"],
-            "3rd Msg": []
+            "1st Msg": ["linkedin"],
+            "2nd Msg": [],
+            "3rd Msg": [],
+            "Replied": [],
+            "Got Project": []
         },
         socialProfiles: [
-            { key: "linkedin", name: "LinkedIn", text: "in", link: "", level: 2 },
+            { key: "instagram", name: "Instagram", text: "IG", link: "", level: 1 }
+        ]
+    },
+    {
+        id: "live_seed_2",
+        businessName: "ULTIMATE - Malta",
+        businessType: "Ecommerce",
+        serviceProducts: "ecommerce Product",
+        clientName: "ULTIMATE - Malta",
+        clientDesignation: "Company",
+        leadNo: "03",
+        lastMsgFromMySide: "3 August, LinkedIn",
+        clientDescription: "Ecommerce outreach and response tracking.",
+        updatedAt: "2026-08-03",
+        statusLabel: "1st Msg",
+        statuses: {
+            "Research": [],
+            "Observation": [],
+            "1st Msg": ["linkedin"],
+            "2nd Msg": ["email"],
+            "3rd Msg": [],
+            "Replied": [],
+            "Got Project": []
+        },
+        socialProfiles: [
+            { key: "linkedin", name: "LinkedIn", text: "in", link: "", level: 1 },
             { key: "facebook", name: "Facebook", text: "FB", link: "", level: 1 },
-            { key: "instagram", name: "Instagram", text: "IG", link: "", level: 2 },
+            { key: "whatsapp", name: "WhatsApp", text: "WA", link: "", level: 1 },
+            { key: "instagram", name: "Instagram", text: "IG", link: "", level: 1 },
             { key: "email", name: "Email", text: "@", link: "", level: 3 }
+        ]
+    },
+    {
+        id: "live_seed_3",
+        businessName: "Softvanta",
+        businessType: "Software Agency",
+        serviceProducts: "Digital Services",
+        clientName: "Tuhin",
+        clientDesignation: "Founder",
+        leadNo: "01",
+        lastMsgFromMySide: "3 August, FB",
+        clientDescription: "Softvanta is a digital agency where they provide IT related Services",
+        updatedAt: "2026-08-03",
+        statusLabel: "Got Project",
+        statuses: {
+            "Research": [],
+            "Observation": [],
+            "1st Msg": [],
+            "2nd Msg": [],
+            "3rd Msg": [],
+            "Replied": [],
+            "Got Project": ["linkedin"]
+        },
+        socialProfiles: [
+            { key: "facebook", name: "Facebook", text: "FB", link: "", level: 1 }
         ]
     }
 ];
@@ -124,6 +136,14 @@ function byId(id) {
     return document.getElementById(id);
 }
 
+function normalizeSocialLevel(level, fallback = 1) {
+    const parsed = Number(level);
+    if (!Number.isFinite(parsed)) {
+        return fallback;
+    }
+    return Math.min(Math.max(parsed, 0), 3);
+}
+
 function ensureClientShape(client, index) {
     const normalizedStatuses = client && client.statuses ? client.statuses : createDefaultStatuses();
     const normalizedProfiles = Array.isArray(client && client.socialProfiles)
@@ -135,7 +155,7 @@ function ensureClientShape(client, index) {
                 name: social && social.name ? social.name : meta.title,
                 text: social && social.text ? social.text : (meta.text || "@"),
                 link: social && social.link ? social.link : "",
-                level: Number((social && social.level) || ((socialIndex % 3) + 1))
+                level: normalizeSocialLevel(social && social.level, (socialIndex % 3) + 1)
             };
         })
         : createDefaultSocialProfiles();
@@ -147,6 +167,8 @@ function ensureClientShape(client, index) {
         serviceProducts: (client && client.serviceProducts) || "",
         clientName: (client && client.clientName) || "",
         clientDesignation: (client && client.clientDesignation) || "",
+        leadNo: (client && client.leadNo) || "",
+        lastMsgFromMySide: (client && client.lastMsgFromMySide) || "",
         clientDescription: (client && client.clientDescription) || "",
         statusLabel: (client && STATUS_STEPS.includes(client.statusLabel)) ? client.statusLabel : STATUS_STEPS[0],
         updatedAt: (client && client.updatedAt) || new Date().toISOString().slice(0, 10),
@@ -182,6 +204,17 @@ function hydrateClientsFromStorage() {
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) {
             clients = FALLBACK_CLIENTS.map((client, index) => ensureClientShape(client, index));
+            return;
+        }
+
+        const hasLegacyDummyClients = parsed.some((client) => {
+            const name = String((client && client.businessName) || "").toLowerCase();
+            return name === "nova interiors" || name === "atlas legal" || name === "bloom dental";
+        });
+
+        if (hasLegacyDummyClients) {
+            clients = FALLBACK_CLIENTS.map((client, index) => ensureClientShape(client, index));
+            persistClients();
             return;
         }
 
@@ -359,8 +392,8 @@ function toggleStatusDropdown(forceOpen) {
 }
 
 function getDetailSocialKeysForClient(client) {
-    const allKeys = Array.isArray(SOCIAL_PLATFORM_OPTIONS) && SOCIAL_PLATFORM_OPTIONS.length > 0
-        ? [...SOCIAL_PLATFORM_OPTIONS]
+    const allKeys = Array.isArray(DETAIL_SOCIAL_STATUS_OPTIONS) && DETAIL_SOCIAL_STATUS_OPTIONS.length > 0
+        ? [...DETAIL_SOCIAL_STATUS_OPTIONS]
         : ["linkedin"];
 
     return allKeys;
@@ -465,7 +498,7 @@ function getClientInfoMarkup(client) {
 
 function getSocialIconMarkup(social, index) {
     const meta = CHANNEL_META[social.key] || { text: social.text || "?", title: social.name || social.key };
-    const badgeValue = Math.min(Number(social.level || index + 1) || 1, 3);
+    const badgeValue = normalizeSocialLevel(social.level, Math.min(index + 1, 3));
 
     if (meta.icon) {
         return `
@@ -516,6 +549,27 @@ function renderClientCards() {
         const designationMarkup = client.clientDesignation
             ? `<p class="client-card-designation">${client.clientDesignation}</p>`
             : "";
+        const extraCardValues = [
+            { label: "Last Msg From My Side", value: client.lastMsgFromMySide },
+            { label: "Lead No", value: client.leadNo }
+        ].map((item) => ({
+            label: item.label,
+            value: String(item.value || "").trim()
+        })).filter((item) => item.value.length > 0);
+        const extraCardValuesMarkup = extraCardValues.length > 0
+            ? `
+                <div class="client-card-extra-section">
+                    <div class="client-card-extra-values">
+                        ${extraCardValues.map((item) => `
+                            <div class="client-card-extra-value-item">
+                                <span class="client-card-extra-value-label">${item.label}:</span>
+                                <span class="client-card-extra-value-text">${item.value}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+            `
+            : "";
         return `
             <article class="client-card" data-client-id="${client.id}">
                 <div class="client-card-head">
@@ -532,9 +586,12 @@ function renderClientCards() {
                     </div>
                 </div>
                 <div class="client-card-main">
-                    <div>
+                    <div class="client-card-top-section">
+                        <div class="client-card-identity">
                         <h3 class="client-business-name">${displayClientName}</h3>
                         ${designationMarkup}
+                        </div>
+                        ${extraCardValuesMarkup}
                     </div>
                     ${getClientInfoMarkup(client)}
                     ${getClientSocialIconsMarkup(client)}
@@ -591,6 +648,8 @@ function createEmptyClientDraft() {
         serviceProducts: "",
         clientName: "",
         clientDesignation: "",
+        leadNo: "",
+        lastMsgFromMySide: "",
         clientDescription: "",
         statusLabel: STATUS_STEPS[0],
         updatedAt: new Date().toISOString().slice(0, 10),
@@ -688,7 +747,7 @@ function openSocialLinkModal(clientId, socialIndex) {
         clientId,
         socialIndex,
         selectedKey: social.key || "linkedin",
-        selectedLevel: Number(social.level || 1)
+        selectedLevel: normalizeSocialLevel(social.level, 1)
     };
 
     byId("socialLinkTitle").textContent = `${social.name} Link`;
@@ -753,7 +812,7 @@ function renderClientSocialList(client) {
             <div class="client-social-item${social.link ? " has-link" : ""}" ${social.link ? `data-social-link="${social.link}"` : ""}>
                 <div class="client-social-icon">
                     ${iconMarkup}
-                    <span class="client-social-level">${social.level || 1}</span>
+                    <span class="client-social-level">${normalizeSocialLevel(social.level, 1)}</span>
                 </div>
                 <div class="client-social-meta">
                     <div class="client-social-name">${socialName}</div>
@@ -801,6 +860,8 @@ function openClientPanel(clientId) {
     byId("detailServiceProducts").value = client.serviceProducts;
     byId("detailClientName").value = client.clientName || "";
     byId("detailClientDesignation").value = client.clientDesignation || "";
+    byId("detailLeadNo").value = client.leadNo || "";
+    byId("detailLastMsgFromMySide").value = client.lastMsgFromMySide || "";
     byId("detailClientDescription").value = client.clientDescription || "";
     renderClientSocialList(client);
     renderDetailSocialDropdown();
@@ -823,6 +884,8 @@ function openClientCreatePanel() {
     byId("detailServiceProducts").value = "";
     byId("detailClientName").value = "";
     byId("detailClientDesignation").value = "";
+    byId("detailLeadNo").value = "";
+    byId("detailLastMsgFromMySide").value = "";
     byId("detailClientDescription").value = "";
     renderClientSocialList(panelDraftClient);
     renderDetailSocialDropdown();
@@ -858,6 +921,8 @@ function saveClientDetails() {
     const statusLabel = byId("detailClientStatus").value;
     const clientName = byId("detailClientName").value.trim();
     const clientDesignation = byId("detailClientDesignation").value.trim();
+    const leadNo = byId("detailLeadNo").value.trim();
+    const lastMsgFromMySide = byId("detailLastMsgFromMySide").value.trim();
     const clientDescription = byId("detailClientDescription").value.trim();
 
     if (!businessName || !businessType || !serviceProducts || !clientName || !clientDesignation || !clientDescription) {
@@ -871,6 +936,8 @@ function saveClientDetails() {
     panelDraftClient.statusLabel = STATUS_STEPS.includes(statusLabel) ? statusLabel : STATUS_STEPS[0];
     panelDraftClient.clientName = clientName;
     panelDraftClient.clientDesignation = clientDesignation;
+    panelDraftClient.leadNo = leadNo;
+    panelDraftClient.lastMsgFromMySide = lastMsgFromMySide;
     panelDraftClient.clientDescription = clientDescription;
 
     if (panelMode === "add") {
@@ -882,6 +949,8 @@ function saveClientDetails() {
             statusLabel: panelDraftClient.statusLabel,
             clientName: panelDraftClient.clientName,
             clientDesignation: panelDraftClient.clientDesignation,
+            leadNo: panelDraftClient.leadNo,
+            lastMsgFromMySide: panelDraftClient.lastMsgFromMySide,
             clientDescription: panelDraftClient.clientDescription,
             updatedAt: new Date().toISOString().slice(0, 10),
             statuses: JSON.parse(JSON.stringify(panelDraftClient.statuses || createDefaultStatuses())),
@@ -906,6 +975,8 @@ function saveClientDetails() {
     client.statusLabel = panelDraftClient.statusLabel;
     client.clientName = panelDraftClient.clientName;
     client.clientDesignation = panelDraftClient.clientDesignation;
+    client.leadNo = panelDraftClient.leadNo;
+    client.lastMsgFromMySide = panelDraftClient.lastMsgFromMySide;
     client.clientDescription = panelDraftClient.clientDescription;
     client.socialProfiles = JSON.parse(JSON.stringify(panelDraftClient.socialProfiles || []));
     client.statuses = JSON.parse(JSON.stringify(panelDraftClient.statuses || createDefaultStatuses()));
@@ -957,7 +1028,7 @@ function saveSocialLink() {
 
     const selectedKey = socialModalState.selectedKey || "linkedin";
     const meta = getSocialMeta(selectedKey);
-    const selectedLevel = socialModalState.selectedLevel || 1;
+    const selectedLevel = normalizeSocialLevel(socialModalState.selectedLevel, 1);
 
     if (socialModalState.mode === "add") {
         client.socialProfiles = client.socialProfiles || [];
@@ -1066,6 +1137,8 @@ function saveClientForm() {
             statusLabel: STATUS_STEPS[0],
             clientName: "",
             clientDesignation: "",
+            leadNo: "",
+            lastMsgFromMySide: "",
             clientDescription: "",
             updatedAt: today,
             statuses: createDefaultStatuses(),
@@ -1247,7 +1320,7 @@ function initClientDashboard() {
         if (!levelButton) {
             return;
         }
-        setSocialLevel(Number(levelButton.dataset.level || 1));
+        setSocialLevel(normalizeSocialLevel(levelButton.dataset.level, 1));
     });
     byId("socialLinkOverlay")?.addEventListener("click", (event) => {
         if (event.target.id === "socialLinkOverlay") {

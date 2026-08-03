@@ -140,6 +140,14 @@
                 <p class="client-detail-label">Client designation</p>
                 <input class="client-detail-input" id="detailClientDesignation" type="text" value="-">
             </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Lead No</p>
+                <input class="client-detail-input" id="detailLeadNo" type="text" value="-">
+            </div>
+            <div class="client-detail-block">
+                <p class="client-detail-label">Last Msg From My Side</p>
+                <input class="client-detail-input" id="detailLastMsgFromMySide" type="text" value="-">
+            </div>
         </section>
 
         <section class="client-panel-section client-panel-section-business" aria-label="Business details">
@@ -191,8 +199,9 @@
         </div>
         <label class="client-modal-label" for="socialLinkInput">Profile link</label>
         <input class="client-modal-input" id="socialLinkInput" type="url" placeholder="https://...">
-        <label class="client-modal-label">Social level (1-3)</label>
+        <label class="client-modal-label">Social level (0-3)</label>
         <div class="social-level-group" id="socialLevelGroup">
+            <button class="social-level-btn" type="button" data-level="0">0</button>
             <button class="social-level-btn active" type="button" data-level="1">1</button>
             <button class="social-level-btn" type="button" data-level="2">2</button>
             <button class="social-level-btn" type="button" data-level="3">3</button>

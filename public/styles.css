@@ -462,6 +462,48 @@ option{
     color:#64748b;
 }
 
+.client-card-top-section{
+    display:flex;
+    flex-direction:column;
+    gap:34px;
+}
+
+.client-card-identity{
+    display:block;
+}
+
+.client-card-extra-section{
+    margin-top:0;
+}
+
+.client-card-extra-values{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.client-card-extra-value-item{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+}
+
+.client-card-extra-value-label{
+    font-size:12px;
+    font-weight:700;
+    color:#64748b;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+}
+
+.client-card-extra-value-text{
+    font-size:17px;
+    font-weight:700;
+    color:#dc2626;
+    line-height:1.35;
+}
+
 .client-card-menu{
     position:relative;
 }
